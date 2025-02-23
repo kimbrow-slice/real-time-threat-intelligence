@@ -1,7 +1,7 @@
 ## Group 2 RTTI Team Structure
 
 Project Manager: Madison Alexander
-OSINT Specialist: Kenneth Kakie
+OSINT Specialist/Front-End Developer: Kenneth Kakie
 Risk Analyst: Hashim Abdulla
-Developer: Jeffery Kimbrow
-Documentation Lead/Git Admin: Mohamed Elgasim
+Back-End Developer: Jeffery Kimbrow
+Git Admin: Mohamed Elgasim

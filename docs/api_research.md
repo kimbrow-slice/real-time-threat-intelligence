@@ -44,14 +44,14 @@ import vt
 #creating the client (vt_api)
 vt_api = vt.Client("57413ddb6a6cc0657942fd811421c76d67cc3bee905626823ee31123c2d68f89")
 
-# ex: checking the safety of a URL:
+-# ex: checking the safety of a URL:
 url_id = vt.url_id("http://www.virustotal.com")
 url_results = vt_api.get_object("/urls/{}", url_id)
 
-# checking how often a url is checked
+-# checking how often a url is checked
 url_results.times_submitted
 
-# checking url analysis details 
+-# checking url analysis details 
 url_results.last_analysis_stats
 
  
@@ -67,30 +67,30 @@ $ pip install requests
 SECOND:
 import requests as securitytrails_api
 
-# Set up your API key
+-# Set up your API key
 api_key = erAnjLGmQKcwwS3cv0pp0zg9utUZqBFx
 
-# The base URL for SecurityTrails API; the endpoint:
+-# The base URL for SecurityTrails API; the endpoint:
 base_url = "https://api.securitytrails.com/v1/domain/"
 #/v1/domain/{domain}: Get information about a specific domain.
 
-# Other sample endpoints
+-# Other sample endpoints
 #/v1/ips/lookup/{ip}: Get information about a specific IP address.
 #/v1/ips/ptr/{ip}: Reverse lookup for PTR records.
 
 
-# The domain you want to query
+-# The domain you want to query
 domain = "google.com"
 
-# Set up headers with your API key
+-# Set up headers with your API key
 headers = {
 	"APIKEY": api_key
 }
 
-# Make a GET request to the API endpoint
+-# Make a GET request to the API endpoint
 response = securitytrails_api.get(f"{base_url}{domain}", headers=headers)
 
-# Check if the request was successful
+-# Check if the request was successful
 if response.status_code == 200:
 	# Parse the JSON response
 	data = response.json()

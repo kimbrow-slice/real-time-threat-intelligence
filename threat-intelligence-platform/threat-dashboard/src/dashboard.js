@@ -1,37 +1,53 @@
 import React, { useState } from "react";
-import { scanIpAddress } from "./api"; // Import VirusTotal function
+import { scanIpAddress, shodanScanIp } from "./api";
 
 function Dashboard() {
-  const [ipAddress, setIpAddress] = useState(""); //  State for IP input
-  const [result, setResult] = useState(null); //  State to store API response
-  const [error, setError] = useState(""); // State for errors
+  const [vtIpAddress, setVtIpAddress] = useState("");
+  const [shodanIpAddress, setShodanIpAddress] = useState("");
+  const [vtResult, setVtResult] = useState(null);
+  const [shodanResult, setShodanResult] = useState(null);
+  const [error, setError] = useState("");
 
-  // Example data for asset inventory, threat-vulnerability mappings, and risk scores
-  const [threatData, setThreatData] = useState([
+  const [threatData] = useState([
     { name: "SQL Injection", vulnerability: "Web Application", risk_score: 7.5 },
     { name: "Cross-Site Scripting", vulnerability: "Web Application", risk_score: 8.0 },
     { name: "Phishing Attack", vulnerability: "Email", risk_score: 6.0 }
   ]);
-  
-  // Function to scan IP with VirusTotal
-  const fetchIpDetails = async () => {
-    if (!ipAddress.trim()) {
-      setError("Please enter a valid IP address.");
+
+  const fetchVirusTotalDetails = async () => {
+    if (!vtIpAddress.trim()) {
+      setError("Please enter a valid IP address for VirusTotal.");
       return;
     }
 
-    setError(""); // Clear previous errors
+    setError("");
 
     try {
-      const data = await scanIpAddress(ipAddress); // Send request to VirusTotal
-      setResult(data); // Store API response in state
+      const vtData = await scanIpAddress(vtIpAddress);
+      setVtResult(vtData);
     } catch (err) {
-      setError("Failed to fetch IP details. Ensure the API is reachable.");
+      setError("Failed to fetch VirusTotal details.");
       console.error("VirusTotal API request error:", err);
     }
   };
 
-  // Function to render the threat data in a table
+  const fetchShodanDetails = async () => {
+    if (!shodanIpAddress.trim()) {
+      setError("Please enter a valid IP address for Shodan.");
+      return;
+    }
+
+    setError("");
+
+    try {
+      const shodanData = await shodanScanIp(shodanIpAddress);
+      setShodanResult(shodanData);
+    } catch (err) {
+      setError("Failed to fetch Shodan details.");
+      console.error("Shodan API request error:", err);
+    }
+  };
+
   const renderThreats = () => {
     return threatData.map((threat, index) => (
       <tr key={index}>
@@ -42,34 +58,79 @@ function Dashboard() {
     ));
   };
 
-  // Main content for Dashboard
+  const renderVirusTotalCard = () => {
+    if (!vtResult) return null;
+
+    const { attributes } = vtResult.data;
+
+    return (
+      <div className="card">
+        <h3>VirusTotal Data</h3>
+        <ul>
+          <li><strong>Owner:</strong> {attributes.as_owner} (AS{attributes.asn})</li>
+          <li><strong>Location:</strong> {attributes.country} ({attributes.continent})</li>
+          <li><strong>Network:</strong> {attributes.network}</li>
+          <li><strong>Reputation:</strong> {attributes.reputation}</li>
+          <li><strong>Harmless Engines:</strong> {attributes.last_analysis_stats.harmless}</li>
+          <li><strong>Malicious Engines:</strong> {attributes.last_analysis_stats.malicious}</li>
+          <li><strong>Suspicious Engines:</strong> {attributes.last_analysis_stats.suspicious}</li>
+        </ul>
+        <a href={vtResult.data.links.self} target="_blank" rel="noopener noreferrer">Full VT Report</a>
+      </div>
+    );
+  };
+
+  const renderShodanCard = () => {
+    if (!shodanResult) return null;
+
+    return (
+      <div className="card">
+        <h3>Shodan Data</h3>
+        <ul>
+          <li><strong>Organization:</strong> {shodanResult.org}</li>
+          <li><strong>Operating System:</strong> {shodanResult.os || "N/A"}</li>
+          <li><strong>ISP:</strong> {shodanResult.isp}</li>
+          <li><strong>Open Ports:</strong> {shodanResult.ports.join(", ")}</li>
+          <li><strong>Hostnames:</strong> {shodanResult.hostnames.join(", ") || "None"}</li>
+        </ul>
+        <a href={`https://www.shodan.io/host/${shodanIpAddress}`} target="_blank" rel="noopener noreferrer">Full Shodan Report</a>
+      </div>
+    );
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Threat Intelligence Dashboard</h1>
-      <p>Enter an IP address to check for threat intelligence data via VirusTotal.</p>
 
-      {/* Input field for IP address */}
-      <input
-        type="text"
-        placeholder="Enter IP address"
-        value={ipAddress}
-        onChange={(e) => setIpAddress(e.target.value)}
-      />
+      <div className="input-section">
+        <h2>VirusTotal Lookup</h2>
+        <input
+          type="text"
+          placeholder="Enter IP address for VirusTotal"
+          value={vtIpAddress}
+          onChange={(e) => setVtIpAddress(e.target.value)}
+        />
+        <button onClick={fetchVirusTotalDetails}>Check VirusTotal</button>
+      </div>
 
-      {/* Button to trigger API request */}
-      <button onClick={fetchIpDetails}>Check IP</button>
+      <div className="input-section">
+        <h2>Shodan Lookup</h2>
+        <input
+          type="text"
+          placeholder="Enter IP address for Shodan"
+          value={shodanIpAddress}
+          onChange={(e) => setShodanIpAddress(e.target.value)}
+        />
+        <button onClick={fetchShodanDetails}>Check Shodan</button>
+      </div>
 
-      {/* Display API results */}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {result && (
-        <div className="result-container">
-          <h2>VirusTotal IP Details:</h2>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
-        </div>
-      )}
+      <div className="results-container">
+        {renderVirusTotalCard()}
+        {renderShodanCard()}
+      </div>
 
-      {/* Display threat-vulnerability mappings and risk scores */}
       <div className="threat-intelligence">
         <h2>Threat Intelligence Overview</h2>
         <table>

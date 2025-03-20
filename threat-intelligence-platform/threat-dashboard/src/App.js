@@ -1,60 +1,46 @@
 import React, { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
-
-import Dashboard from "./dashboard"; 
+import Dashboard from "./dashboard";
 
 function LoginPage() {
-  const [username, setUsername] = useState(""); //  Define username state
-  const [password, setPassword] = useState(""); // Define password state
-  const [error, setError] = useState(""); //  Define error state
-  const navigate = useNavigate(); //  Define navigate function
-  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000";  
-  console.log("Loaded API URL from .env:", process.env.REACT_APP_API_URL); // Debugging statement
-
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const loginForm = async (e) => {
     e.preventDefault();
-  
+
     if (!username || !password) {
-      alert("Both fields must be completed!"); // Alert user if they input no username or password
+      setError("Both fields must be completed!");
       return;
     }
-  
+
     try {
-      console.log("API URL:", process.env.REACT_APP_API_URL); // Debugging statement
-  
       const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        credentials: "include", // Ensures cookies & sessions work || TODO: Include bcypt to provide more cookie security
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
-      
-      const text = await response.text();
-      console.log("Raw response from Flask:", text); // Debugging statement
-  
-      const data = JSON.parse(text);
-      console.log("Parsed JSON:", data); // Debugging statement
-  
+
+      const data = await response.json();
+
       if (response.ok && data.redirect) {
-        console.log("Redirecting to:", data.redirect);
         navigate(data.redirect);
       } else {
-        throw new Error(data.error || "Login failed");
+        setError(data.error || "Login failed");
       }
     } catch (err) {
-      console.error("Fetch error:", err); // Debugging statement
       setError("Could not connect to server. Ensure Flask is running.");
+      console.error("Fetch error:", err);
     }
   };
-  
 
-  
- // Main content
   return (
     <div className="App">
       <header className="App-header">
@@ -89,7 +75,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown routes */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }

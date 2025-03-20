@@ -1,17 +1,24 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000"; // Flask backend
+const VT_API_URL = process.env.REACT_APP_VIRUSTOTAL_API_URL;
+const SHODAN_API_URL = process.env.REACT_APP_SHODAN_API_URL;
 
-// 
 export const scanIpAddress = async (ipAddress) => {
   try {
-    const url = `${API_URL}/scan_ip?ip=${ipAddress}`; 
-    console.log("Making request to Flask backend:", url); // Debug statements
-
-    const response = await axios.get(url);
+    const response = await axios.get(`${VT_API_URL}?ip=${ipAddress}`);
     return response.data;
   } catch (error) {
-    console.error("Flask API request error:", error); // Debug statements
+    console.error("VirusTotal API error:", error);
+    throw error;
+  }
+};
+
+export const shodanScanIp = async (ipAddress) => {
+  try {
+    const response = await axios.get(`${SHODAN_API_URL}?ip=${ipAddress}`);
+    return response.data;
+  } catch (error) {
+    console.error("Shodan API error:", error);
     throw error;
   }
 };

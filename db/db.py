@@ -2,9 +2,11 @@ import os
 import psycopg2
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from db.db import get_connection
 
 # Load environment variables
 load_dotenv()
+
 
 # Decrypt DB password
 FERNET_KEY = os.getenv("FERNET_KEY")

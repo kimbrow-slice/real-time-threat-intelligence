@@ -1,6 +1,6 @@
-Database Schema for Threat Intelligence Data (PostgreSQL)
+-- - Database Schema for Threat Intelligence Data (PostgreSQL)
 
-- Assets Table
+-- - Assets Table
 
 CREATE TABLE assets (
     id SERIAL PRIMARY KEY,
@@ -9,7 +9,7 @@ CREATE TABLE assets (
     description TEXT
 );
 
-- Threats Table
+-- - Threats Table
     
 CREATE TABLE threats (
     id SERIAL PRIMARY KEY,
@@ -18,7 +18,7 @@ CREATE TABLE threats (
     risk_level INT CHECK (risk_level BETWEEN 1 AND 10)
 );
 
-- Vulnerabilities Table
+-- - Vulnerabilities Table
 
 CREATE TABLE vulnerabilities (
     id SERIAL PRIMARY KEY,
@@ -27,7 +27,7 @@ CREATE TABLE vulnerabilities (
     severity_level INT CHECK (severity_level BETWEEN 1 AND 10)
 );
 
-- Risk Rating Table
+-- - Risk Rating Table
 
 CREATE TABLE risk_ratings (
     id SERIAL PRIMARY KEY,

@@ -9,7 +9,16 @@ CREATE TABLE tva_mapping (
     risk_score INT GENERATED ALWAYS AS (likelihood * impact) STORED -- Computed risk score
 );
 
--- Initial dataset with threat-vulnerability pairs
+-- Creating assets with id 1 through 5 for asset tables
+INSERT INTO assets (id, name, category, description) VALUES
+(1, 'Firewall Appliance', 'Hardware', 'Cisco ASA firewall.'),
+(2, 'Customer Management System', 'Software', 'Salesforce-based.'),
+(3, 'Payment Records', 'Data', 'Sensitive card data.'),
+(4, 'John Doe - Engineer', 'People', 'IT Security Engineer.'),
+(5, 'Backup Process', 'Process', 'Daily DB backups.');
+
+
+Initial dataset with threat-vulnerability pairs
 INSERT INTO tva_mapping (asset_id, threat_name, vulnerability_description, likelihood, impact)
 VALUES
     (1, 'Unauthorized Access', 'Misconfigured firewall rules exposing internal systems.', 4, 5),

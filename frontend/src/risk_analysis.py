@@ -14,7 +14,7 @@ def refine_risk_with_llm(threat, likelihood, impact):
     
     response = openai.ChatCompletion.create(
         model="gpt-4",
-        messages=[{"role": "system", "content": "You are a cybersecurity risk analyst."},
+        messages=[{"role": "system", "content": "You are a cybersecurity risk analyst tasked with ensuring that the Risk Score produced is provided by the Impact x Likelihood of each potential vulnerability."},
                   {"role": "user", "content": prompt}]
     )
     

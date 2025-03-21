@@ -57,7 +57,7 @@ REACT_APP_VIRUSTOTAL_API_KEY=your_virustotal_key
 SHODAN_API=your_shodan_key
 ```
 
-### 3. Setting up the Database
+### 3. Set Up the Database
 Make sure PostgreSQL is installed and running.
 #### Enter PostgreSQL shell
 ```
@@ -72,7 +72,7 @@ CREATE DATABASE threat_intel;
 \i path/to/db/schema.sql
 ```
 
-### 4. Installing Dependencies
+### 4. Install Dependencies
 #### Backend
 ```
 cd api
@@ -85,7 +85,7 @@ cd ../frontend
 npm install
 ```
 
-### 5. Running the Application In Development Mode
+### 5. Run the App in Development Mode
 From the ```frontend/``` directory:
 ```
 npm run dev

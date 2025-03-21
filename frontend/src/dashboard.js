@@ -1,18 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { scanIpAddress, shodanScanIp } from "./api";
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   const [vtIpAddress, setVtIpAddress] = useState("");
   const [shodanIpAddress, setShodanIpAddress] = useState("");
   const [vtResult, setVtResult] = useState(null);
   const [shodanResult, setShodanResult] = useState(null);
   const [error, setError] = useState("");
+  const [userId, setUserId] = useState(null);
 
   const [threatData] = useState([
     { name: "SQL Injection", vulnerability: "Web Application", risk_score: 7.5 },
     { name: "Cross-Site Scripting", vulnerability: "Web Application", risk_score: 8.0 },
     { name: "Phishing Attack", vulnerability: "Email", risk_score: 6.0 }
   ]);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    if (!storedUserId) {
+      navigate("/"); // Redirect if no session
+    } else {
+      setUserId(storedUserId);
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user_id");
+    navigate("/");
+  };
 
   const fetchVirusTotalDetails = async () => {
     if (!vtIpAddress.trim()) {
@@ -23,7 +41,7 @@ function Dashboard() {
     setError("");
 
     try {
-      const vtData = await scanIpAddress(vtIpAddress);
+      const vtData = await scanIpAddress(vtIpAddress, userId); // 👈 Pass user ID
       setVtResult(vtData);
     } catch (err) {
       setError("Failed to fetch VirusTotal details.");
@@ -100,7 +118,12 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      <h1>Threat Intelligence Dashboard</h1>
+      <div className="header">
+        <h1>Threat Intelligence Dashboard</h1>
+        <button onClick={handleLogout} style={{ float: "right" }}>
+          Logout
+        </button>
+      </div>
 
       <div className="input-section">
         <h2>VirusTotal Lookup</h2>

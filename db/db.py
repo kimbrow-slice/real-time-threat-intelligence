@@ -2,7 +2,6 @@ import os
 import psycopg2
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
-from db.db import get_connection
 
 # Load environment variables
 load_dotenv()
@@ -39,6 +38,31 @@ if __name__ == "__main__":
     if conn:
         print("Connected to the database!")
         conn.close()
+    else:
+        print("Connection failed.")
+
+def initialize_schema(schema_file="schema.sql"):
+    conn = get_connection()
+    if not conn:
+        print("Failed to connect to DB for schema initialization.")
+        return
+
+    try:
+        with conn.cursor() as cur, open(schema_file, "r") as f:
+            cur.execute(f.read())
+        conn.commit()
+        print("Schema initialized successfully.")
+    except Exception as e:
+        print(" Error applying schema:", e)
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    conn = get_connection()
+    if conn:
+        print("Connected to the database!")
+        conn.close()
+        initialize_schema()  # ← Add this line to run the schema.sql file
     else:
         print("Connection failed.")
 

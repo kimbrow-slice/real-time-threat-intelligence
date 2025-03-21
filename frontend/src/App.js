@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, Link } from "react-router-dom";
 import "./App.css";
 import Dashboard from "./dashboard";
+import Register from "./components/Register"; 
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,12 +12,12 @@ function LoginPage() {
 
   const loginForm = async (e) => {
     e.preventDefault();
-
+  
     if (!username || !password) {
       setError("Both fields must be completed!");
       return;
     }
-
+  
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
         method: "POST",
@@ -27,10 +28,12 @@ function LoginPage() {
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok && data.redirect) {
+        // Save user_id to localStorage
+        localStorage.setItem("user_id", data.user_id);
         navigate(data.redirect);
       } else {
         setError(data.error || "Login failed");
@@ -40,6 +43,7 @@ function LoginPage() {
       console.error("Fetch error:", err);
     }
   };
+  
 
   return (
     <div className="App">
@@ -64,6 +68,9 @@ function LoginPage() {
             />
             <input type="submit" value="Login" />
           </form>
+          <p style={{ marginTop: "1rem" }}>
+            Don’t have an account? <Link to="/register">Register here</Link>
+          </p>
         </div>
       </header>
     </div>
@@ -75,6 +82,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/register" element={<Register />} /> 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

@@ -34,7 +34,7 @@ def log_user_action(user_id, action_type, details=None):
             """, (user_id, action_type, details))
         conn.commit()
     except Exception as e:
-        print("[!] Logging error:", e)
+        print("Logging error:", e)
     finally:
         if conn:
             conn.close()
@@ -147,6 +147,7 @@ def get_shodan_data():
                 """, (ip_address, json.dumps(data)))
                 conn.commit()
         except Exception as e:
+            print("Error saving Shodan scan to DB:", e)
         finally:
             if conn:
                 conn.close()
@@ -157,6 +158,7 @@ def get_shodan_data():
         return jsonify(data)
     else:
         return jsonify({"error": "Shodan API request failed", "details": response.text}), response.status_code
+
 
 ########################################
 #              Run Server              #

@@ -26,8 +26,6 @@ def get_connection():
             password=DB_PASSWORD
 
         )
-        print("DB_USER:", os.getenv("DB_USER"))
-        print("DB_PASSWORD (decrypted):", DB_PASSWORD)
 
         return conn
     except Exception as e:

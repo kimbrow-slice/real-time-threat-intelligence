@@ -55,6 +55,7 @@ DB_PORT=5432
 ```
 REACT_APP_VIRUSTOTAL_API_KEY=your_virustotal_key
 SHODAN_API=your_shodan_key
+HUGGING_FACE_KEY=your_huggingface_key
 ```
 
 ### 3. Set Up the Database

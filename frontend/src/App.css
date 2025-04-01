@@ -1,65 +1,180 @@
-.App {
-  text-align: center;
+/* Base layout */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #1e1e2f;
+  color: #f3f4f6;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.dashboard-container {
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 2rem;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background-color: #282c34;
-  color: white;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  height: 100vh;
+/* Header */
+.header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
 }
 
-h1, h2 {
+.header h1 {
+  font-size: 2rem;
+  text-align:center;
   color: #61dafb;
 }
 
-.container {
-  width: 80%;
-  max-width: 600px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.header button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
+/* Input sections */
+.input-section {
+  background: #2a2b3d;
+  padding: 1.5rem;
+  border-radius: 10px;
+  display: grid;
+  gap: 1.2rem;
+}
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.lookup label {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.lookup input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: none;
+  background: #374151;
+  color: white;
+}
+
+.lookup button {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.error {
+  color: #f87171;
+  font-weight: bold;
+}
+
+/* Card styling */
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: #2a2b3d;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #93c5fd;
+}
+
+.card ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.card li {
+  padding: 0.25rem 0;
+}
+
+.card a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+/* EPSS Table */
+.epss-section {
+  background-color: #2a2b3d;
+  padding: 1.5rem;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.epss-section h2 {
+  margin-bottom: 1rem;
+  color: #fcd34d;
+}
+
+.siem-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.siem-table th,
+.siem-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #374151;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.siem-table th {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+.siem-table tr:hover {
+  background-color: #1f2937;
+}
+
+.siem-table a {
+  color: #38bdf8;
+}
+
+.siem-table td span {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Dynamic risk label colors */
+.siem-table td span[data-category="Critical Risk"] {
+  background-color: #dc2626;
+}
+
+.siem-table td span[data-category="High Risk"] {
+  background-color: #f97316;
+}
+
+.siem-table td span[data-category="Moderate Risk"] {
+  background-color: #facc15;
+  color: #1f2937;
+}
+
+.siem-table td span[data-category="Low Risk"] {
+  background-color: #10b981;
+}
+
+.siem-table td span[data-category="No Risk"] {
+  background-color: #6b7280;
 }

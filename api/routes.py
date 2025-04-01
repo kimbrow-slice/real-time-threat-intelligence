@@ -332,13 +332,15 @@ def enrich_risks():
 
     for advisory in advisories:
         try:
+            # Ensure we are passing candidate_labels to Hugging Face API
             payload = {
                 "inputs": f"{advisory['cve']} may impact {advisory['package']} {advisory['version']}: {advisory['summary']}",
                 "parameters": {
-                    "candidate_labels": list(impact_mapping.keys())
+                    "candidate_labels": ["Critical Risk", "High Risk", "Moderate Risk", "Low Risk", "No Risk"]  # Define candidate labels
                 }
             }
 
+            # Send request to Hugging Face API
             response = requests.post(os.getenv("HUGGING_FACE_URL"), headers=headers, json=payload)
 
             if response.status_code == 503:
@@ -369,6 +371,7 @@ def enrich_risks():
             enriched.append({**advisory, "risk_score": 0, "risk_label": "Error"})
 
     return jsonify({"results": enriched})
+
 
 ########################################
 #              Run Server              #

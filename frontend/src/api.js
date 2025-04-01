@@ -4,7 +4,7 @@ const VT_API_URL = process.env.REACT_APP_VIRUSTOTAL_API_URL;
 const SHODAN_API_URL = process.env.REACT_APP_SHODAN_API_URL;
 const SHODAN_API_SEARCH_URL = process.env.REACT_APP_SHODAN_API_SEARCH_URL; 
 const SHODAN_API_RESOLVE_DNS_URL = process.env.REACT_APP_SHODAN_API_RESOLVE_DNS_URL; 
-const API_BASE_URL = 'http://localhost:5000'; 
+const API_BASE_URL = process.env.REACT_APP_API_URL; 
 
 // Helper to get user_id from localStorage
 const getUserId = () => localStorage.getItem("user_id");
@@ -104,7 +104,7 @@ export const scanDependencies = async (packages) => {
   }
 };
 
-// Fetch EPSS data for CVEs extracted from advisories
+// EPSS and Hugging Face
 export const getEPSSData = async (advisories) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/scan_epss`, {
@@ -117,27 +117,31 @@ export const getEPSSData = async (advisories) => {
   }
 };
 
-// Enrich with risk/threat classification using HuggingFace
+// Enrich with HuggingFace API for Risk Classification
+// Enrich with HuggingFace API for Risk Classification
 export const enrichRisks = async (epssResults) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/enrich_risks`, {
       advisories: epssResults,
     });
 
-    if (response.data.error && response.data.error.includes("You have exceeded your monthly included credits")) {
+    if (response.data.error && response.data.error.includes("You have exceeded your monthly Hugging Face API credits")) {
       console.warn("You have exceeded your monthly Hugging Face API credits. The program will continue running without risk enrichment.");
-      
       alert("Hugging Face API quota exceeded. The program will continue, but risk enrichment data is unavailable.");
-
-      return epssResults; 
+      return epssResults; // Return the original data if no enrichment is available
     }
 
-    return response.data.results || [];
+    // Ensure that we return an array, even if the results are not available
+    const enrichedData = response.data.results || [];
+    if (!Array.isArray(enrichedData)) {
+      console.warn("Invalid enrichment data format received: ", response.data);
+      return epssResults;
+    }
+
+    return enrichedData;
   } catch (error) {
     console.error("Risk enrichment error:", error.response?.data || error.message);
-
     alert("An error occurred while enriching risk data. The program will continue running.");
-
-    return epssResults; 
+    return epssResults;
   }
 };

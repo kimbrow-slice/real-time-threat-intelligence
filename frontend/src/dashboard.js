@@ -30,8 +30,8 @@ function Dashboard() {
   const [epssData, setEpssData] = useState([]);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(false); 
+  const [buttonDisabled, setButtonDisabled] = useState(false);
   const [isVtCardOpen, setIsVtCardOpen] = useState(false);
   const [isShodanCardOpen, setIsShodanCardOpen] = useState(false);
   const [isShodanSearchCardOpen, setIsShodanSearchCardOpen] = useState(false);
@@ -42,37 +42,45 @@ function Dashboard() {
     if (!storedUserId) navigate("/");
     else setUserId(storedUserId);
   }, [navigate]);
-
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const osvResponse = await scanDependencies(samplePackages);
-        const normalizedOSV = Array.isArray(osvResponse)
-          ? osvResponse
-          : osvResponse.results || [];
 
-        const advisoriesWithCVEs = normalizedOSV.flatMap((entry) =>
-          (entry.aliases || [])
-            .filter((alias) => alias.startsWith("CVE-"))
-            .map((cve) => ({
-              cve,
-              package: entry.package,
-              version: entry.version,
-              original_id: entry.osv_id,
-              summary: entry.summary
-            }))
-        );
-
-        const epssResponse = await getEPSSData(advisoriesWithCVEs);
-        const enriched = await enrichRisks(epssResponse);
-        setEpssData(enriched); // Ensure data is an array
-      } catch (err) {
-        console.error("Failed to fetch vulnerability data:", err);
-      }
-    };
-
-    fetchData();
+    setButtonDisabled(false);
   }, []);
+
+  const handleFetchEPSS = async () => {
+    setLoading(true); // Start loading state when button is clicked
+    setButtonDisabled(true); // Disable the button to prevent multiple clicks
+
+    try {
+      const osvResponse = await scanDependencies(samplePackages);
+      const normalizedOSV = Array.isArray(osvResponse)
+        ? osvResponse
+        : osvResponse.results || [];
+
+      const advisoriesWithCVEs = normalizedOSV.flatMap((entry) =>
+        (entry.aliases || [])
+          .filter((alias) => alias.startsWith("CVE-"))
+          .map((cve) => ({
+            cve,
+            package: entry.package,
+            version: entry.version,
+            original_id: entry.osv_id,
+            summary: entry.summary,
+          }))
+      );
+
+      const epssResponse = await getEPSSData(advisoriesWithCVEs);
+      const enriched = await enrichRisks(epssResponse);
+      setEpssData(enriched); // Set the fetched and enriched EPSS data
+    } catch (err) {
+      console.error("Failed to fetch vulnerability data:", err);
+      setError("An error occurred while fetching the EPSS data.");
+    } finally {
+      setLoading(false); // End loading state
+      setButtonDisabled(false); // Re-enable the button
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user_id");
@@ -275,6 +283,7 @@ function Dashboard() {
         </div>
 
         {error && <p className="error">{error}</p>}
+        
       </section>
 
       <section className="results">
@@ -284,10 +293,17 @@ function Dashboard() {
         {renderShodanDnsResolveCard()}
       </section>
 
-      <div className="epss-section">
+<div className="epss-section">
         <h2>Dependency Risk Intelligence</h2>
+        <button 
+          onClick={handleFetchEPSS} 
+          disabled={buttonDisabled || loading}
+        >
+          {loading ? "Fetching EPSS Data..." : "Fetch EPSS Data"}
+        </button>
+        
         {loading ? (
-          <p>Loading EPSS data...</p>
+          <p>Loading...</p>
         ) : epssData && epssData.length > 0 ? (
           <table className="siem-table">
             <thead>
@@ -300,7 +316,7 @@ function Dashboard() {
                 <th>Date</th>
                 <th>Summary</th>
                 <th>Risk</th>
-                <th>Category</th>
+                <th>Criticality</th>
               </tr>
             </thead>
             <tbody>
@@ -330,9 +346,7 @@ function Dashboard() {
                     <td>{(entry.percentile * 100).toFixed(2)}%</td>
                     <td>{entry.date}</td>
                     <td title={entry.summary}>
-                      {entry.summary.length > 60
-                        ? `${entry.summary.slice(0, 60)}...`
-                        : entry.summary}
+                      {entry.summary ? (entry.summary.length > 60 ? `${entry.summary.slice(0, 60)}...` : entry.summary) : "No Summary Available"}
                     </td>
                     <td>{entry.risk_score}</td>
                     <td>
@@ -343,7 +357,7 @@ function Dashboard() {
                           borderRadius: "6px",
                           color: "white",
                           fontWeight: "bold",
-                          fontSize: "0.85rem"
+                          fontSize: "0.85rem",
                         }}
                       >
                         {entry.risk_label}

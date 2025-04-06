@@ -5,10 +5,10 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask_cors import CORS
 from dotenv import load_dotenv
+from db.db import insert_alert
+from db.alerts import trigger_alerts 
 import bcrypt
 import json
-
-
 from db.db import get_connection
 
 load_dotenv()
@@ -22,6 +22,12 @@ VIRUSTOTAL_IP_URL = "https://www.virustotal.com/api/v3/ip_addresses"
 SHODAN_API = os.getenv("SHODAN_API")
 HUGGING_FACE_KEY = os.getenv("HUGGING_FACE_KEY")
 HUGGING_FACE_URL = os.getenv("HUGGING_FACE_URL")
+
+# SendGrid Environment Variables
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+SENDGRID_EMAIL = os.getenv("SENDGRID_EMAIL")
+SENDGRID_RECIPIENT = os.getenv("SENDGRID_RECIPIENT")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 ########################################
 #         Logging Helper Function      #
@@ -371,6 +377,32 @@ def enrich_risks():
             enriched.append({**advisory, "risk_score": 0, "risk_label": "Error"})
 
     return jsonify({"results": enriched})
+
+########################################
+#            Real Time Alerts          #
+########################################
+@app.route("/process_threat", methods=["POST"])
+def process_threat():
+    data = request.json
+
+    threat_name = data.get("threat_name")
+    risk_score = data.get("risk_score")
+    alert_description = data.get("alert_description", "")
+
+    if risk_score > 20:
+        alert_type = "High Risk"
+        alert_description = f"Threat {threat_name} with risk score {risk_score} exceeded threshold."
+
+        # Insert the alert into the database
+        insert_alert(threat_name, risk_score, alert_type, alert_description)
+
+        # Trigger the alerts via email and webhook
+        trigger_alerts(threat_name, risk_score, alert_description)
+
+
+        return jsonify({"message": "High risk alert triggered!"}), 200
+    else:
+        return jsonify({"message": "Threat processed but risk is below threshold."}), 200
 
 
 ########################################

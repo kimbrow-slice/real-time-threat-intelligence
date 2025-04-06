@@ -118,7 +118,6 @@ export const getEPSSData = async (advisories) => {
 };
 
 // Enrich with HuggingFace API for Risk Classification
-// Enrich with HuggingFace API for Risk Classification
 export const enrichRisks = async (epssResults) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/enrich_risks`, {
@@ -143,5 +142,19 @@ export const enrichRisks = async (epssResults) => {
     console.error("Risk enrichment error:", error.response?.data || error.message);
     alert("An error occurred while enriching risk data. The program will continue running.");
     return epssResults;
+  }
+};
+
+// Function to trigger a threat alert (send to backend)
+export const triggerAlert = async (threatName, riskScore, description) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/process_threat`, {
+      threat_name: threatName,
+      risk_score: riskScore,
+      description: description
+    });
+    console.log(response.data.message);  // You can add success message handling here
+  } catch (error) {
+    console.error("Error triggering alert:", error);
   }
 };

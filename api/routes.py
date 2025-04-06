@@ -44,6 +44,7 @@ def log_user_action(user_id, action_type, details=None):
         conn.commit()
     except Exception as e:
         print("Logging error:", e)
+        print("Logging error:", e)
     finally:
         if conn:
             conn.close()
@@ -158,6 +159,7 @@ def get_shodan_data():
                 """, (ip_address, json.dumps(data)))
                 conn.commit()
         except Exception as e:
+            print("Error saving Shodan scan to DB:", e)
             print("Error saving Shodan scan to DB:", e)
         finally:
             if conn:

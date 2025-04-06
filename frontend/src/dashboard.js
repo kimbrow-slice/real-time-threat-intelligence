@@ -237,7 +237,6 @@ function Dashboard() {
   const toggleShodanSearchCard = () => setIsShodanSearchCardOpen(!isShodanSearchCardOpen);
   const toggleShodanDnsResolveCard = () => setIsShodanDnsResolveCardOpen(!isShodanDnsResolveCardOpen);
 
-  // Function to render alerts
   // Render Alert Cards
   const renderAlertCards = () => {
     const groupedAlerts = {}; // Group alerts by their threat name

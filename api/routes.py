@@ -406,7 +406,58 @@ def process_threat():
     else:
         return jsonify({"message": "Threat processed but risk is below threshold."}), 200
 
+def fetch_alerts_from_db():
+    try:
+        conn = get_connection()  # Use your existing DB connection method
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, threat_name, risk_score, alert_type, alert_description, created_at
+                FROM alerts
+                ORDER BY created_at DESC
+            """)
+            alerts = cur.fetchall()  # Fetch all rows
 
+            if not alerts:
+                return []  # Return empty list if no alerts found
+
+
+            return [
+                {
+                    "id": alert[0],
+                    "threat_name": alert[1],
+                    "risk_score": alert[2],
+                    "alert_type": alert[3],
+                    "alert_description": alert[4],
+                    "created_at": alert[5].isoformat()  # Convert to a standard string format
+                }
+                for alert in alerts
+            ]
+    
+    except Exception as e:
+        print(f"Error fetching alerts: {str(e)}")
+        return []  # Return empty list in case of any error
+    
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route("/get_alerts", methods=["GET"])
+def get_alerts():
+    try:
+        # Assuming you have a function to fetch alerts from the DB
+        alerts = fetch_alerts_from_db()  # Function to fetch alerts from DB
+        if not alerts:
+            return jsonify({"message": "No alerts found."}), 404  # Return a 404 if no alerts are found
+
+        return jsonify(alerts), 200  # Ensure this returns JSON data with a 200 OK status
+    except Exception as e:
+        print(f"Error fetching alerts: {str(e)}")
+        return jsonify({"error": "Error fetching alerts"}), 500  # Return error as JSON with a 500 status
+
+
+
+    
 ########################################
 #              Run Server              #
 ########################################

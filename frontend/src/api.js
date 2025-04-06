@@ -153,8 +153,8 @@ export const triggerAlert = async (threatName, riskScore, description) => {
       risk_score: riskScore,
       description: description
     });
-    console.log(response.data.message);  // You can add success message handling here
+    alert(response.data.message);
   } catch (error) {
-    console.error("Error triggering alert:", error);
+
   }
 };

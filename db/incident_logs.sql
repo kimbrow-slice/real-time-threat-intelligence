@@ -10,6 +10,5 @@ CREATE TABLE incident_response (
 CREATE TABLE incident_logs (
   id SERIAL PRIMARY KEY,
   incident_response_id INTEGER NOT NULL REFERENCES incident_response(id) ON DELETE CASCADE,
-  log_entry TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -50,13 +50,33 @@ FERNET_KEY=your_fernet_key
 DB_HOST=localhost
 DB_PORT=5432
 ```
-
 #### API Keys
 ```
-REACT_APP_VIRUSTOTAL_API_KEY=your_virustotal_key
+VIRUSTOTAL_API_KEY=your_virustotal_key
 SHODAN_API=your_shodan_key
 HUGGING_FACE_KEY=your_huggingface_key
+SHODAN_API_BASE_URL=
+SHODAN_API_SEARCH_URL=
+SHODAN_API_RESOLVE_DNS_URL=
+SHODAN_API_HTTPHEADERS_URL=
+SHODAN_API_IP_URL=
+VIRUSTOTAL_IP=
 ```
+#### Localhost API
+````
+REACT_APP_SHODAN_API_URL=
+REACT_APP_API_URL=
+REACT_APP_VIRUSTOTAL_API_URL=
+REACT_APP_VIRUSTOTAL_API_KEY=
+REACT-APP_ALERTS=
+````
+#### SMTP Alerting
+````
+SENDGRID_API_KEY=
+SENDGRID_EMAIL=
+SENDGRID_RECIPIENT=
+WEBHOOK_URL=
+````
 
 ### 3. Set Up the Database
 Make sure PostgreSQL is installed and running.

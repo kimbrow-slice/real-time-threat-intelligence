@@ -260,7 +260,7 @@ function Dashboard() {
             <ul>
               {groupedAlerts[threatName].map((alert) => (
                 <li key={alert.id}>
-                  <strong>Risk Score:</strong> {alert.risk_score} <br />
+                  <strong>Risk Score:</strong> {Number(alert.risk_score).toFixed(1)} <br />
                   <strong>Description:</strong> {alert.alert_description} <br />
                   <strong>Timestamp:</strong> {new Date(alert.created_at).toLocaleString()}
                 </li>
@@ -269,7 +269,7 @@ function Dashboard() {
           )}
           {!isAlertOpen[threatName] && (
             <div>
-              <strong>Risk Score:</strong> {firstAlert.risk_score} <br />
+              <strong>Risk Score with Decay Factor:</strong> {Number(firstAlert.risk_score).toFixed(1)} <br />
               <strong>Description:</strong> {firstAlert.alert_description} <br />
               <strong>Timestamp:</strong> {new Date(firstAlert.created_at).toLocaleString()}
             </div>
@@ -392,9 +392,7 @@ function Dashboard() {
             onChange={(e) => setShodanIpAddress(e.target.value)}
           />
           <button onClick={fetchShodanDetails}>Scan</button>
-        </div>
 
-        <div className="lookup">
           <label>Shodan Query: </label>
           <input
             type="text"
@@ -403,9 +401,7 @@ function Dashboard() {
             onChange={(e) => setShodanQuery(e.target.value)}
           />
           <button onClick={fetchShodanSearch}>Search</button>
-        </div>
 
-        <div className="lookup">
           <label>Shodan Hostnames: </label>
           <input
             type="text"
@@ -414,6 +410,14 @@ function Dashboard() {
             onChange={(e) => setShodanHostnames(e.target.value)}
           />
           <button onClick={fetchShodanDnsResolve}>Resolve DNS</button>
+        </div>
+
+        <div className="lookup">
+         
+        </div>
+
+        <div className="lookup">
+ 
         </div>
 
         {error && <p className="error">{error}</p>}     
@@ -483,7 +487,7 @@ function Dashboard() {
                 <th>Pkg</th>
                 <th>Ver</th>
                 <th>CVE</th>
-                <th>EPSS</th>
+                <th>Enriched Risk Score</th>
                 <th>30d Exploit %</th>
                 <th>Date</th>
                 <th>Summary</th>
@@ -514,7 +518,7 @@ function Dashboard() {
                         {entry.cve}
                       </a>
                     </td>
-                    <td>{(entry.epss * 100).toFixed(2)}</td>
+                    <td>{(entry.risk_score).toFixed(2)}</td>
                     <td>{(entry.percentile * 100).toFixed(2)}%</td>
                     <td>{entry.date}</td>
                     <td title={entry.summary}>

@@ -4,7 +4,19 @@ from sendgrid.helpers.mail import Mail
 import requests
 from db.db import get_connection
 from dotenv import load_dotenv
+from api.risk_calculator import calculate_risk, get_risk_label
+
 import datetime
+
+from db.db import get_connection 
+
+def trigger_alerts(threat_name, likelihood, impact, alert_description, last_seen):
+    risk_score = calculate_risk(likelihood, impact, last_seen)
+    risk_label = get_risk_label(risk_score)
+    print(f"Triggering email alert for: {threat_name}, Risk Score: {risk_score}")
+    insert_alert(threat_name, risk_score, risk_label, alert_description)
+    send_email_alert(threat_name, risk_score, alert_description)
+    send_webhook_alert(threat_name, risk_score, alert_description)
 
 # Load environment variables
 load_dotenv()
@@ -56,18 +68,15 @@ def send_webhook_alert(threat, risk_score, alert_description):
         print(f"Error sending webhook alert for {threat}: {e}")
 
 
-# Function to trigger alerts with risk score calculation
 def trigger_alerts(threat_name, likelihood, impact, alert_description, last_seen):
-    # Calculate the risk score using the time-weighted formula
     risk_score = calculate_risk(likelihood, impact, last_seen)
-    print(f"Triggering email alert for: {threat_name}, Risk Score: {risk_score}")
-    
-    # Insert alert into the database
-    insert_alert(threat_name, risk_score, "Alert", alert_description)
-    
-    # Send email and webhook alerts
+    risk_label = get_risk_label(risk_score)  # This converts, e.g., 25.0 to "Critical Risk"
+    insert_alert(threat_name, risk_score, risk_label, alert_description)
+
     send_email_alert(threat_name, risk_score, alert_description)
     send_webhook_alert(threat_name, risk_score, alert_description)
+
+
     
 # Function to insert an alert into the database
 def insert_alert(threat_name, risk_score, alert_type, alert_description):

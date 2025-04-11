@@ -10,6 +10,8 @@ import {
   fetchShodanDnsResolveData,
 } from "./api";
 
+
+
 const samplePackages = [
   { name: "axios", version: "1.8.1", ecosystem: "npm", source: "npm-audit" },
   { name: "chart.js", version: "4.4.8", ecosystem: "npm", source: "npm-audit" },
@@ -44,6 +46,34 @@ function Dashboard() {
   const [threatNameFilter, setThreatNameFilter] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState({});
   const [groupedAlerts, setGroupedAlerts] = useState([]);
+
+  const computeRiskLabel = (score) => {
+  if (score >= 4.0) return "Critical Risk";
+  else if (score >= 3.0) return "High Risk";
+  else if (score >= 2.0) return "Moderate Risk";
+  else if (score >= 1.0) return "Low Risk";
+  else return "No Risk";
+};
+
+
+// Maps a risk label to its corresponding CSS class.
+const getRiskLabelClass = (label) => {
+  switch (label) {
+    case "Critical Risk":
+      return "critical-risk";
+    case "High Risk":
+      return "high-risk";
+    case "Moderate Risk":
+      return "moderate-risk";
+    case "Low Risk":
+      return "low-risk";
+    case "No Risk":
+      return "no-risk";
+    default:
+      return "alert-risk"; // fallback if the label is "Alert" or unrecognized
+  }
+};
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id");
@@ -120,6 +150,7 @@ function Dashboard() {
     }, {});
     setGroupedAlerts(grouped);
   };
+  
 
   const toggleAlertDetails = (id) => {
     setIsAlertOpen((prevState) => ({
@@ -144,22 +175,7 @@ function Dashboard() {
       setThreatNameFilter(e.target.value);
     }
   };
-  const getRiskLabelClass = (alertType) => {
-    switch (alertType) {
-      case "Critical Risk":
-        return "critical-risk";
-      case "High Risk":
-        return "high-risk";
-      case "Moderate Risk":
-        return "moderate-risk";
-      case "Low Risk":
-        return "low-risk";
-      case "No Risk":
-        return "no-risk";
-      default:
-        return "";
-    }
-  };
+
   const handleAlertClick = (alertId) => {
     // Navigate to the expanded view of the alert (this would be a new route in your app)
     navigate(`/alert/${alertId}`);
@@ -172,7 +188,8 @@ function Dashboard() {
     navigate("/");
   };
 
-  const fetchVirusTotalDetails = async () => {
+  const 
+  fetchVirusTotalDetails = async () => {
     if (!vtIpAddress.trim()) {
       setError("Please enter a valid IP address for VirusTotal.");
       return;
@@ -237,54 +254,6 @@ function Dashboard() {
   const toggleShodanSearchCard = () => setIsShodanSearchCardOpen(!isShodanSearchCardOpen);
   const toggleShodanDnsResolveCard = () => setIsShodanDnsResolveCardOpen(!isShodanDnsResolveCardOpen);
 
-  // Render Alert Cards
-  const renderAlertCards = () => {
-    const groupedAlerts = {}; // Group alerts by their threat name
-    alerts.forEach((alert) => {
-      if (!groupedAlerts[alert.threat_name]) {
-        groupedAlerts[alert.threat_name] = [];
-      }
-      groupedAlerts[alert.threat_name].push(alert);
-    });
-
-    return Object.keys(groupedAlerts).map((threatName) => {
-      const alertCount = groupedAlerts[threatName].length;
-      const firstAlert = groupedAlerts[threatName][0]; // The first alert for preview
-
-      return (
-        <div className={`card alert-card ${getRiskLabelClass(firstAlert.alert_type)}`} key={threatName}>
-          <h2 onClick={() => toggleAlertDetails(threatName)} style={{ cursor: "pointer" }}>
-            {isAlertOpen[threatName] ? "▲" : "▼"} {threatName} ({alertCount} Alerts)
-          </h2>
-          {isAlertOpen[threatName] && (
-            <ul>
-              {groupedAlerts[threatName].map((alert) => (
-                <li key={alert.id}>
-                  <strong>Risk Score:</strong> {Number(alert.risk_score).toFixed(1)} <br />
-                  <strong>Description:</strong> {alert.alert_description} <br />
-                  <strong>Timestamp:</strong> {new Date(alert.created_at).toLocaleString()}
-                </li>
-              ))}
-            </ul>
-          )}
-          {!isAlertOpen[threatName] && (
-            <div>
-              <strong>Risk Score with Decay Factor:</strong> {Number(firstAlert.risk_score).toFixed(1)} <br />
-              <strong>Description:</strong> {firstAlert.alert_description} <br />
-              <strong>Timestamp:</strong> {new Date(firstAlert.created_at).toLocaleString()}
-            </div>
-          )}
-          <div>
-            <br></br>
-            <span className={`siem-label ${getRiskLabelClass(firstAlert.alert_type)}`}>
-              {firstAlert.alert_type}
-            </span>
-          </div>
-        </div>
-      );
-    });
-  };
-
   const renderVirusTotalCard = () => {
     if (!vtResult) return null;
     const { attributes } = vtResult.data;
@@ -332,6 +301,71 @@ function Dashboard() {
     );
   };
 
+  const renderAlertCards = () => {
+    // Group alerts by threat name
+    const groupedAlerts = {};
+    alerts.forEach((alert) => {
+      if (!groupedAlerts[alert.threat_name]) {
+        groupedAlerts[alert.threat_name] = [];
+      }
+      groupedAlerts[alert.threat_name].push(alert);
+    });
+  
+    return Object.keys(groupedAlerts).map((threatName) => {
+      const alertCount = groupedAlerts[threatName].length;
+      const firstAlert = groupedAlerts[threatName][0];
+  
+      // If the stored alert_type is "Alert", compute its actual label from risk_score.
+      const displayLabel =
+        firstAlert.alert_type === "Alert"
+          ? computeRiskLabel(firstAlert.risk_score)
+          : firstAlert.alert_type;
+  
+      // Use displayLabel for the CSS class.
+      const cardClass = getRiskLabelClass(displayLabel);
+  
+      return (
+        <div className={`card alert-card ${cardClass}`} key={threatName}>
+          <h2 onClick={() => toggleAlertDetails(threatName)} style={{ cursor: "pointer" }}>
+            {isAlertOpen[threatName] ? "▲" : "▼"} {threatName} ({alertCount} Alerts)
+          </h2>
+          {isAlertOpen[threatName] ? (
+            <ul>
+              {groupedAlerts[threatName].map((alert) => {
+                // For each alert, if its alert_type is "Alert", compute its proper label.
+                const labelForAlert =
+                  alert.alert_type === "Alert"
+                    ? computeRiskLabel(alert.risk_score)
+                    : alert.alert_type;
+                return (
+                  <li key={alert.id}>
+                    <strong>Risk Score:</strong> {Number(alert.risk_score).toFixed(2)} <br />
+                    <strong>Description:</strong> {alert.alert_description} <br />
+                    <strong>Timestamp:</strong> {new Date(alert.created_at).toLocaleString()} <br />
+                    <strong>Risk:</strong> {labelForAlert}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div>
+              <strong>Risk Score with Decay Factor:</strong> {Number(firstAlert.risk_score).toFixed(2)} <br />
+              <strong>Description:</strong> {firstAlert.alert_description} <br />
+              <strong>Timestamp:</strong> {new Date(firstAlert.created_at).toLocaleString()}
+            </div>
+          )}
+          <div>
+            <br />
+            <span className={`siem-label ${cardClass}`}>
+              {displayLabel}
+            </span>
+          </div>
+        </div>
+      );
+    });
+  };
+  
+
   const renderShodanSearchCard = () => {
     if (!shodanSearchResult) return null;
 
@@ -365,7 +399,7 @@ function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="header">
-        <h1> Real Time Threat Intelligence Dashboard</h1>
+        <h1> ShopSmart Solutions SIEM</h1>
         <button onClick={handleLogout}>Logout</button>
       </div>
 
@@ -412,13 +446,6 @@ function Dashboard() {
           <button onClick={fetchShodanDnsResolve}>Resolve DNS</button>
         </div>
 
-        <div className="lookup">
-         
-        </div>
-
-        <div className="lookup">
- 
-        </div>
 
         {error && <p className="error">{error}</p>}     
       </section>
@@ -455,12 +482,18 @@ function Dashboard() {
             
           </div>
           </div>
+
+
           <div className="alerts-grid">
             {renderAlertCards()}
           </div>
+          
         </section>
-      )}  
+      )} 
+
       {error && <p className="error">{error}</p>}
+
+      
 
       <section className="results">
         {renderVirusTotalCard()}

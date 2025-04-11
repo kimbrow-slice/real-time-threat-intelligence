@@ -11,11 +11,8 @@ import bcrypt
 import json
 import datetime
 from dateutil.parser import isoparse 
-from risk_calculator import calculate_risk
+from .risk_calculator import calculate_risk, get_risk_label
 from dateutil import parser
-
-import logging
-
 
 
 from db.db import get_connection
@@ -391,6 +388,7 @@ def enrich_risks():
 
                 risk_score = calculate_risk(likelihood, impact, last_seen)
                 risk_label = get_risk_label(risk_score)
+                __all__ = ['calculate_risk', 'get_risk_label']
 
                 enriched.append({
                     **advisory,

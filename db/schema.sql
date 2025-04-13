@@ -49,10 +49,36 @@ CREATE TABLE IF NOT EXISTS public.ip_scans (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE logs (
+-- Create the alerts table if it doesn't already exist
+CREATE TABLE IF NOT EXISTS alerts (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    action_type VARCHAR(100) NOT NULL,         -- e.g., 'login', 'scan_ip', 'get_shodan_data'
-    details TEXT,                              -- e.g., scanned IP or endpoint info
-    timestamp TIMESTAMPTZ DEFAULT NOW()
+    threat_name VARCHAR(255) NOT NULL,
+    risk_score INT NOT NULL,
+    alert_type VARCHAR(50) NOT NULL,
+    alert_description TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create the logs table if it doesn't already exist
+CREATE TABLE IF NOT EXISTS logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    details TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- Create the threat_data table if it doesn't already exist
+CREATE TABLE IF NOT EXISTS threat_data (
+    id SERIAL PRIMARY KEY,
+    threat_type VARCHAR(255) NOT NULL,
+    risk_score INT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample data in alert table
+INSERT INTO threat_data (threat_type, risk_score, description)
+VALUES
+    ('SQL Injection', 25, 'Injection vulnerability in SQL queries'),
+    ('Phishing Attack', 30, 'Credential theft through phishing email'),
+    ('Data Breach', 35, 'Unauthorized access leading to data exposure');

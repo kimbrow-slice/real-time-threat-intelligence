@@ -44,17 +44,41 @@ Create a ```.env``` file inside the /api directory with the following:
 #### Database
 ```
 DB_USER=your_postgres_username
-DB_NAME=threat_intel
+DB_NAME=your_database_name
 DB_PASSWORD_ENC=your_encrypted_password
 FERNET_KEY=your_fernet_key
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=your_port_number
 ```
 
 #### API Keys
 ```
-REACT_APP_VIRUSTOTAL_API_KEY=your_virustotal_key
+VIRUSTOTAL_IP=your_virus_total_ip_url
+VIRUSTOTAL_API_KEY=your_virustotal_key
 SHODAN_API=your_shodan_key
+HUGGING_FACE_KEY=your_huggingface_key
+SHODAN_API_BASE_URL=your_shodan_base_url
+SHODAN_API_SEARCH_URL=your_shodan_search_url
+SHODAN_API_RESOLVE_DNS_URL=your_shodan_resolve_url
+SHODAN_API_HTTPHEADERS_URL=your_shodan_httpheaders_url
+SHODAN_API_IP_URL=your_shodan_ip_url
+```
+
+#### Localhost API
+```
+REACT_APP_SHODAN_API_URL=internal_route_url/
+REACT_APP_API_URL=internal_route_url/
+REACT_APP_VIRUSTOTAL_API_URL=internal_route_url/
+REACT_APP_VIRUSTOTAL_API_KEY=internal_route_url/
+REACT-APP_ALERTS=internal_route_url/
+```
+
+#### SMTP Alerting
+```
+SENDGRID_API_KEY=your_sendgrid_key
+SENDGRID_EMAIL=your_sendgrid_sender_email
+SENDGRID_RECIPIENT=your_sendgrid_receipient
+WEBHOOK_URL=your_webhook_url
 ```
 
 ### 3. Set Up the Database

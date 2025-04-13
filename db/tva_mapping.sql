@@ -18,7 +18,7 @@ INSERT INTO assets (id, name, category, description) VALUES
 (5, 'Backup Process', 'Process', 'Daily DB backups.');
 
 
-Initial dataset with threat-vulnerability pairs
+-- Initial dataset with threat-vulnerability pairs
 INSERT INTO tva_mapping (asset_id, threat_name, vulnerability_description, likelihood, impact)
 VALUES
     (1, 'Unauthorized Access', 'Misconfigured firewall rules exposing internal systems.', 4, 5),
@@ -26,3 +26,35 @@ VALUES
     (3, 'Data Breach', 'Weak encryption on stored payment records.', 4, 5),
     (4, 'Phishing Attack', 'Lack of awareness training leading to credential theft.', 4, 5), 
     (5, 'Malicious File Execution', 'OSINT Tool flagged malware in backup files.', 4, 5); 
+
+
+-- updating tva analysis
+UPDATE tva_mapping
+SET likelihood = 5 /* <-- hardcoded likelihood?  */
+WHERE threat_name = 'Unauthorized Access'
+AND EXISTS (SELECT 1 FROM threat_data WHERE threat_data.threat_type =
+'Unauthorized Access' AND threat_data.risk_score > 20); /* <-- hardcoded risk score? */ 
+
+UPDATE tva_mapping
+SET likelihood = 5 /* <-- hardcoded likelihood?  */
+WHERE threat_name = 'SQL Injection'
+AND EXISTS (SELECT 1 FROM threat_data WHERE threat_data.threat_type =
+'SQL Injection' AND threat_data.risk_score > 20); /* <-- hardcoded risk score? */ 
+
+UPDATE tva_mapping
+SET likelihood = 5 /* <-- hardcoded likelihood?  */
+WHERE threat_name = 'Data Breach'
+AND EXISTS (SELECT 1 FROM threat_data WHERE threat_data.threat_type =
+'Data Breach' AND threat_data.risk_score > 20); /* <-- hardcoded risk score? */ 
+
+UPDATE tva_mapping
+SET likelihood = 5 /* <-- hardcoded likelihood?  */
+WHERE threat_name = 'Phishing Attack'
+AND EXISTS (SELECT 1 FROM threat_data WHERE threat_data.threat_type =
+'Phishing Attack' AND threat_data.risk_score > 20); /* <-- hardcoded risk score? */ 
+
+UPDATE tva_mapping
+SET likelihood = 5 /* <-- hardcoded likelihood?  */
+WHERE threat_name = 'Malicious File Execution'
+AND EXISTS (SELECT 1 FROM threat_data WHERE threat_data.threat_type =
+'Malicious File Execution' AND threat_data.risk_score > 20); /* <-- hardcoded risk score? */ 

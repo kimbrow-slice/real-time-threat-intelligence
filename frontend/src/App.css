@@ -15,15 +15,16 @@ body {
 
 /* Header */
 .header {
-  display: flex;
+  display:inline-flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .header h1 {
   font-size: 2rem;
   text-align:center;
+  margin-left:5px;
   color: #61dafb;
+
 }
 
 .header button {
@@ -35,6 +36,13 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+.alerts-section {
+  background: #2a2b3d;
+  padding: 10px;
+  border-radius: 10px;
+  display: grid;
+  gap: 1.2rem;
+}
 
 /* Input sections */
 .input-section {
@@ -43,29 +51,50 @@ body {
   border-radius: 10px;
   display: grid;
   gap: 1.2rem;
+  text-align: center;
 }
 
-.lookup label {
+.lookup {
+  display: flex;
+  text-align: center;
+  height:40px;
+  padding-bottom:20px;
+}
+input{
+  text-align: center;
+  gap:1.2rem;
+}
+
+.lookup label, .filters label {
   font-weight: bold;
-  margin-bottom: 0.25rem;
+  text-align:center;
+  padding-bottom:15px;
+  margin-bottom: 15px;
+  gap:1.2rem;
+
 }
 
 .lookup input {
-  padding: 0.5rem;
   border-radius: 4px;
   border: none;
   background: #374151;
   color: white;
+  gap:1.2rem;
+  padding-right:20px;
 }
 
 .lookup button {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
+  margin-bottom:25px;
+  margin-left: 10px;
+  padding-left:10px;
   background: #3b82f6;
   color: white;
+  padding:5px;  
+  height:fit-content;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-right:20px;
 }
 
 .error {
@@ -76,13 +105,21 @@ body {
 /* Card styling */
 .results {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
+  padding:20px;
 }
 
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 20px 0;
+}
 .card {
   background-color: #2a2b3d;
-  padding: 1rem;
+  padding: 20px;
+  padding-right: 30px;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
@@ -177,4 +214,129 @@ body {
 
 .siem-table td span[data-category="No Risk"] {
   background-color: #6b7280;
+}
+/* Alert Card Colors */
+.alert-card,.card alert-card {
+  background-color: #6B7280; /* Or any fallback color */
+  color: #FFF;
+  padding: 20px;
+  border-radius: 6px;
+  margin: auto;
+  font-weight: bold;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+label {
+  padding-right:5px;
+  padding-left:10px;
+}
+.alert-card:hover {
+  transform: translateY(-5px);
+}
+.alert-risk {
+  background-color: #6B7280; /* Or any fallback color */
+  color: #FFF;
+  padding: 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+
+select{
+  text-align: center;
+  background-color: #007bff;
+  color: #f3f4f6;
+  border:solid 1px #111827;
+  border-radius: 50px;
+  
+}
+select:hover{
+  padding:5px;
+  color: #f3f4f6;
+  background-color:#007bff;
+  border:solid 1px #111827;
+  border-radius: 50px;
+  
+}
+
+/* Specific risk label background colors */
+.alert-card.critical-risk {
+  border-left: 5px solid #dc2626;
+}
+
+.alert-card.high-risk {
+  border-left: 5px solid #f97316;
+}
+
+.alert-card.moderate-risk {
+  border-left: 5px solid #facc15;
+}
+
+.alert-card.low-risk {
+  border-left: 5px solid #10b981;
+}
+
+.alert-card.no-risk {
+  border-left: 5px solid #6b7280;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Dynamic risk label colors for alerts */
+.siem-label.critical-risk {
+  background-color: #dc2626;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.siem-label.high-risk {
+  background-color: #f97316;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.siem-label.moderate-risk {
+  background-color: #facc15;
+  color: #1f2937;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.siem-label.low-risk {
+  background-color: #10b981;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.siem-label.no-risk {
+  background-color: #6b7280;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
 }

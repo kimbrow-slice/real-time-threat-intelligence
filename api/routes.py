@@ -5,8 +5,14 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask_cors import CORS
 from dotenv import load_dotenv
+from db.db import insert_alert
+from db.alerts import trigger_alerts 
 import bcrypt
 import json
+import datetime
+from dateutil.parser import isoparse 
+from .risk_calculator import calculate_risk, get_risk_label
+from dateutil import parser
 
 
 from db.db import get_connection
@@ -23,6 +29,12 @@ SHODAN_API = os.getenv("SHODAN_API")
 HUGGING_FACE_KEY = os.getenv("HUGGING_FACE_KEY")
 HUGGING_FACE_URL = os.getenv("HUGGING_FACE_URL")
 
+# SendGrid Environment Variables
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+SENDGRID_EMAIL = os.getenv("SENDGRID_EMAIL")
+SENDGRID_RECIPIENT = os.getenv("SENDGRID_RECIPIENT")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
 ########################################
 #         Logging Helper Function      #
 ########################################
@@ -37,6 +49,7 @@ def log_user_action(user_id, action_type, details=None):
             """, (user_id, action_type, details))
         conn.commit()
     except Exception as e:
+        print("Logging error:", e)
         print("Logging error:", e)
     finally:
         if conn:
@@ -153,6 +166,7 @@ def get_shodan_data():
                 conn.commit()
         except Exception as e:
             print("Error saving Shodan scan to DB:", e)
+            print("Error saving Shodan scan to DB:", e)
         finally:
             if conn:
                 conn.close()
@@ -163,6 +177,7 @@ def get_shodan_data():
         return jsonify(data)
     else:
         return jsonify({"error": "Shodan API request failed", "details": response.text}), response.status_code
+
 
 ########################################
 #     Shodan Search API                #
@@ -299,6 +314,20 @@ def scan_epss():
 ########################################
 #       Hugging Face Enrichment        #
 ########################################
+
+def get_risk_label(score):
+        if score >= 4.0:
+            return "Critical Risk"
+        elif score >= 3.0:
+            return "High Risk"
+        elif score >= 2.0:
+            return "Moderate Risk"
+        elif score >= 1.0:
+            return "Low Risk"
+        else:
+            return "No Risk"
+        
+
 @app.route("/enrich_risks", methods=["POST"])
 def enrich_risks():
     advisories = request.get_json().get("advisories", [])
@@ -314,18 +343,7 @@ def enrich_risks():
         "Low Risk": 2,
         "No Risk": 1
     }
-
-    def get_risk_label(score):
-        if score >= 4.0:
-            return "Critical Risk"
-        elif score >= 3.0:
-            return "High Risk"
-        elif score >= 2.0:
-            return "Moderate Risk"
-        elif score >= 1.0:
-            return "Low Risk"
-        else:
-            return "No Risk"
+    
 
     enriched = []
 
@@ -335,7 +353,7 @@ def enrich_risks():
             payload = {
                 "inputs": f"{advisory['cve']} may impact {advisory['package']} {advisory['version']}: {advisory['summary']}",
                 "parameters": {
-                    "candidate_labels": ["Critical Risk", "High Risk", "Moderate Risk", "Low Risk", "No Risk"]  # Define candidate labels
+                    "candidate_labels": ["Critical Risk", "High Risk", "Moderate Risk", "Low Risk", "No Risk"]
                 }
             }
 
@@ -346,24 +364,43 @@ def enrich_risks():
                 print("HF API is unavailable")
                 enriched.append({**advisory, "risk_score": 0, "risk_label": "Unavailable"})
                 continue
-
+            
             result = response.json()
 
             if isinstance(result, dict) and "scores" in result and "labels" in result:
                 top_label = result["labels"][0]
                 likelihood = result["scores"][0]
                 impact = impact_mapping.get(top_label, 1)
-                risk_score = round(likelihood * impact, 3)
+
+                # Retrieve last_seen and default to a timezone-aware current time
+                last_seen = advisory.get("last_seen", datetime.datetime.now(datetime.timezone.utc))
+
+                # If last_seen is provided as a string, parse it
+                if isinstance(last_seen, str):
+                    try:
+                        last_seen = isoparse(last_seen)
+                    except Exception as e:
+                        print("Error converting last_seen with isoparse:", e)
+                        last_seen = datetime.datetime.now(datetime.timezone.utc)
+
+                if hasattr(last_seen, "tzinfo") and last_seen.tzinfo is not None:
+                    last_seen = last_seen.replace(tzinfo=None)
+
+                risk_score = calculate_risk(likelihood, impact, last_seen)
                 risk_label = get_risk_label(risk_score)
+                __all__ = ['calculate_risk', 'get_risk_label']
 
                 enriched.append({
                     **advisory,
                     "risk_score": risk_score,
                     "risk_label": risk_label
                 })
+
+                # Insert alert into the database
+                insert_alert(advisory['threat_name'], risk_score, risk_label, advisory['summary'])
             else:
-                print("HF API unexpected response format:", result)
                 enriched.append({**advisory, "risk_score": 0, "risk_label": "Malformed Response"})
+
 
         except Exception as e:
             print("HF API error:", str(e))
@@ -371,7 +408,85 @@ def enrich_risks():
 
     return jsonify({"results": enriched})
 
+########################################
+#            Real Time Alerts          #
+########################################
+@app.route("/process_threat", methods=["POST"])
+def process_threat():
+    data = request.json
+    
+    threat_name = data.get("threat_name")
+    alert_description = data.get("alert_description", "")
+    last_seen_str = data.get("last_seen")
+    likelihood = data.get("likelihood")
+    impact = data.get("impact")
 
+
+    # Parse the last_seen timestamp into a datetime object
+    last_seen = datetime.strptime(last_seen_str, "%Y-%m-%dT%H:%M:%SZ")
+
+    # Calculate the actual risk score using the time-weighted function
+    calculated_risk_score = calculate_risk(likelihood, impact, last_seen)
+    
+    # Insert only the calculated risk score into the database
+    insert_alert(threat_name, calculated_risk_score, "Alert", alert_description)
+
+    # Trigger the email and webhook alerts
+    trigger_alerts(threat_name, likelihood, impact, alert_description, last_seen)
+
+    return jsonify({"message": "High risk alert triggered!"}), 200
+
+def fetch_alerts_from_db():
+    try:
+        conn = get_connection()  
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, threat_name, risk_score, alert_type, alert_description, created_at
+                FROM alerts
+                ORDER BY created_at DESC
+            """)
+            alerts = cur.fetchall()  # Fetch all rows
+
+            if not alerts:
+                return []  # Return empty list if no alerts found
+
+
+            return [
+                {
+                    "id": alert[0],
+                    "threat_name": alert[1],
+                    "risk_score": alert[2],
+                    "alert_type": alert[3],
+                    "alert_description": alert[4],
+                    "created_at": alert[5].isoformat()  
+                }
+                for alert in alerts
+            ]
+    
+    except Exception as e:
+        print(f"Error fetching alerts: {str(e)}")
+        return []  # Return empty list in case of any error
+    
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route("/get_alerts", methods=["GET"])
+def get_alerts():
+    try:
+        alerts = fetch_alerts_from_db()  # Function to fetch alerts from DB
+        if not alerts:
+            return jsonify({"message": "No alerts found."}), 404  # Return a 404 if no alerts are found
+
+        return jsonify(alerts), 200  
+    except Exception as e:
+        print(f"Error fetching alerts: {str(e)}")
+        return jsonify({"error": "Error fetching alerts"}), 500  # Return error as JSON with a 500 status
+
+
+
+    
 ########################################
 #              Run Server              #
 ########################################

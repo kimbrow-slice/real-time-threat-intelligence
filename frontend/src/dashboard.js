@@ -10,11 +10,15 @@ import {
   fetchShodanDnsResolveData,
 } from "./api";
 
+
+
 const samplePackages = [
   { name: "axios", version: "1.8.1", ecosystem: "npm", source: "npm-audit" },
+  { name: "chart.js", version: "4.4.8", ecosystem: "npm", source: "npm-audit" },
   { name: "jinja2", version: "3.1.5", ecosystem: "PyPI", source: "pip-audit" },
   { name: "flask", version: "3.1.0", ecosystem: "PyPI", source: "pip-audit" },
-  { name: "requests", version: "2.32.3", ecosystem: "PyPI", source: "pip-audit" },
+  { name: "requests", version: "2.32.3", ecosystem: "PyPI", source: "pip-audit" }
+  ,
 ];
 
 function Dashboard() {
@@ -32,10 +36,44 @@ function Dashboard() {
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false); 
   const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [alerts, setAlerts] = useState([]);
   const [isVtCardOpen, setIsVtCardOpen] = useState(false);
   const [isShodanCardOpen, setIsShodanCardOpen] = useState(false);
   const [isShodanSearchCardOpen, setIsShodanSearchCardOpen] = useState(false);
   const [isShodanDnsResolveCardOpen, setIsShodanDnsResolveCardOpen] = useState(false);
+  const [filteredAlerts, setFilteredAlerts] = useState([]);
+  const [alertTypeFilter, setAlertTypeFilter] = useState("");
+  const [threatNameFilter, setThreatNameFilter] = useState("");
+  const [isAlertOpen, setIsAlertOpen] = useState({});
+  const [groupedAlerts, setGroupedAlerts] = useState([]);
+
+  const computeRiskLabel = (score) => {
+  if (score >= 4.0) return "Critical Risk";
+  else if (score >= 3.0) return "High Risk";
+  else if (score >= 2.0) return "Moderate Risk";
+  else if (score >= 1.0) return "Low Risk";
+  else return "No Risk";
+};
+
+
+// Maps a risk label to its corresponding CSS class.
+const getRiskLabelClass = (label) => {
+  switch (label) {
+    case "Critical Risk":
+      return "critical-risk";
+    case "High Risk":
+      return "high-risk";
+    case "Moderate Risk":
+      return "moderate-risk";
+    case "Low Risk":
+      return "low-risk";
+    case "No Risk":
+      return "no-risk";
+    default:
+      return "alert-risk"; // fallback if the label is "Alert" or unrecognized
+  }
+};
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id");
@@ -82,12 +120,76 @@ function Dashboard() {
     }
   };
 
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/get_alerts");
+        if (response.ok) {
+          const data = await response.json();
+          setAlerts(data);  // Store all alerts in state
+          groupAlertsByType(data); // Group alerts by threat_name
+        } else {
+          setError("Failed to fetch alerts");
+        }
+      } catch (err) {
+        setError("Error fetching alerts");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAlerts();
+  }, []);
+
+  const groupAlertsByType = (alertsData) => {
+    const grouped = alertsData.reduce((acc, alert) => {
+      if (!acc[alert.threat_name]) {
+        acc[alert.threat_name] = [];
+      }
+      acc[alert.threat_name].push(alert);
+      return acc;
+    }, {});
+    setGroupedAlerts(grouped);
+  };
+  
+
+  const toggleAlertDetails = (id) => {
+    setIsAlertOpen((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id], // Toggle the open/closed state for the clicked alert
+    }));
+  };
+
+  useEffect(() => {
+    const filtered = alerts.filter(alert => {
+      const matchesSeverity = alertTypeFilter ? alert.alert_type === alertTypeFilter : true;
+      const matchesType = threatNameFilter ? alert.threat_name.includes(threatNameFilter) : true;
+      return matchesSeverity && matchesType;
+    });
+    setFilteredAlerts(filtered);
+  }, [alertTypeFilter, threatNameFilter, alerts]);
+
+  const handleFilterChange = (e, filterType) => {
+    if (filterType === "severity") {
+      setAlertTypeFilter(e.target.value);
+    } else if (filterType === "type") {
+      setThreatNameFilter(e.target.value);
+    }
+  };
+
+  const handleAlertClick = (alertId) => {
+    // Navigate to the expanded view of the alert (this would be a new route in your app)
+    navigate(`/alert/${alertId}`);
+  };
+
+
+  
   const handleLogout = () => {
     localStorage.removeItem("user_id");
     navigate("/");
   };
 
-  const fetchVirusTotalDetails = async () => {
+  const 
+  fetchVirusTotalDetails = async () => {
     if (!vtIpAddress.trim()) {
       setError("Please enter a valid IP address for VirusTotal.");
       return;
@@ -176,6 +278,7 @@ function Dashboard() {
     );
   };
 
+
   const renderShodanCard = () => {
     if (!shodanResult) return null;
 
@@ -197,6 +300,71 @@ function Dashboard() {
       </div>
     );
   };
+
+  const renderAlertCards = () => {
+    // Group alerts by threat name
+    const groupedAlerts = {};
+    alerts.forEach((alert) => {
+      if (!groupedAlerts[alert.threat_name]) {
+        groupedAlerts[alert.threat_name] = [];
+      }
+      groupedAlerts[alert.threat_name].push(alert);
+    });
+  
+    return Object.keys(groupedAlerts).map((threatName) => {
+      const alertCount = groupedAlerts[threatName].length;
+      const firstAlert = groupedAlerts[threatName][0];
+  
+      // If the stored alert_type is "Alert", compute its actual label from risk_score.
+      const displayLabel =
+        firstAlert.alert_type === "Alert"
+          ? computeRiskLabel(firstAlert.risk_score)
+          : firstAlert.alert_type;
+  
+      // Use displayLabel for the CSS class.
+      const cardClass = getRiskLabelClass(displayLabel);
+  
+      return (
+        <div className={`card alert-card ${cardClass}`} key={threatName}>
+          <h2 onClick={() => toggleAlertDetails(threatName)} style={{ cursor: "pointer" }}>
+            {isAlertOpen[threatName] ? "▲" : "▼"} {threatName} ({alertCount} Alerts)
+          </h2>
+          {isAlertOpen[threatName] ? (
+            <ul>
+              {groupedAlerts[threatName].map((alert) => {
+                // For each alert, if its alert_type is "Alert", compute its proper label.
+                const labelForAlert =
+                  alert.alert_type === "Alert"
+                    ? computeRiskLabel(alert.risk_score)
+                    : alert.alert_type;
+                return (
+                  <li key={alert.id}>
+                    <strong>Risk Score:</strong> {Number(alert.risk_score).toFixed(2)} <br />
+                    <strong>Description:</strong> {alert.alert_description} <br />
+                    <strong>Timestamp:</strong> {new Date(alert.created_at).toLocaleString()} <br />
+                    <strong>Risk:</strong> {labelForAlert}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div>
+              <strong>Risk Score with Decay Factor:</strong> {Number(firstAlert.risk_score).toFixed(2)} <br />
+              <strong>Description:</strong> {firstAlert.alert_description} <br />
+              <strong>Timestamp:</strong> {new Date(firstAlert.created_at).toLocaleString()}
+            </div>
+          )}
+          <div>
+            <br />
+            <span className={`siem-label ${cardClass}`}>
+              {displayLabel}
+            </span>
+          </div>
+        </div>
+      );
+    });
+  };
+  
 
   const renderShodanSearchCard = () => {
     if (!shodanSearchResult) return null;
@@ -231,7 +399,7 @@ function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="header">
-        <h1> Real Time Threat Intelligence Dashboard</h1>
+        <h1> ShopSmart Solutions SIEM</h1>
         <button onClick={handleLogout}>Logout</button>
       </div>
 
@@ -258,9 +426,7 @@ function Dashboard() {
             onChange={(e) => setShodanIpAddress(e.target.value)}
           />
           <button onClick={fetchShodanDetails}>Scan</button>
-        </div>
 
-        <div className="lookup">
           <label>Shodan Query: </label>
           <input
             type="text"
@@ -269,9 +435,7 @@ function Dashboard() {
             onChange={(e) => setShodanQuery(e.target.value)}
           />
           <button onClick={fetchShodanSearch}>Search</button>
-        </div>
 
-        <div className="lookup">
           <label>Shodan Hostnames: </label>
           <input
             type="text"
@@ -282,9 +446,54 @@ function Dashboard() {
           <button onClick={fetchShodanDnsResolve}>Resolve DNS</button>
         </div>
 
-        {error && <p className="error">{error}</p>}
-        
+
+        {error && <p className="error">{error}</p>}     
       </section>
+
+      <section className="filters-section">
+      
+      </section>
+
+      {loading ? (
+        <p>Loading alerts...</p>
+      ) : (
+        <section className="alerts-section">
+          <h2>Recent Alerts  </h2>
+          <div className="filters">
+          <div>
+            <label>Severity            </label>
+            <select onChange={(e) => handleFilterChange(e, "severity")} value={alertTypeFilter}>
+              <option value="">All</option>
+              <option value="High Risk">High Risk</option>
+              <option value="Moderate Risk">Moderate Risk</option>
+              <option value="Low Risk">Low Risk</option>
+              <option value="Critical Risk">Critical Risk</option>
+              <option value="No Risk">No Risk</option>
+            </select>
+            <label>Threat Type            </label>
+            <input
+              type="text"
+              placeholder="Search by threat type"
+              value={threatNameFilter}
+              onChange={(e) => handleFilterChange(e, "type")}
+            />
+          </div>
+          <div>
+            
+          </div>
+          </div>
+
+
+          <div className="alerts-grid">
+            {renderAlertCards()}
+          </div>
+          
+        </section>
+      )} 
+
+      {error && <p className="error">{error}</p>}
+
+      
 
       <section className="results">
         {renderVirusTotalCard()}
@@ -311,7 +520,7 @@ function Dashboard() {
                 <th>Pkg</th>
                 <th>Ver</th>
                 <th>CVE</th>
-                <th>EPSS</th>
+                <th>Enriched Risk Score</th>
                 <th>30d Exploit %</th>
                 <th>Date</th>
                 <th>Summary</th>
@@ -342,7 +551,7 @@ function Dashboard() {
                         {entry.cve}
                       </a>
                     </td>
-                    <td>{(entry.epss * 100).toFixed(2)}</td>
+                    <td>{(entry.risk_score).toFixed(2)}</td>
                     <td>{(entry.percentile * 100).toFixed(2)}%</td>
                     <td>{entry.date}</td>
                     <td title={entry.summary}>
@@ -372,6 +581,7 @@ function Dashboard() {
           <p>No CVEs with EPSS scores found.</p>
         )}
       </div>
+      
     </div>
   );
 }

@@ -1,0 +1,283 @@
+openapi: 3.0.0
+info:
+  title: Threat Intelligence API
+  version: 1.0.0
+  description: API for managing assets, threats, vulnerabilities, risk ratings, and integrating OSINT via VirusTotal.
+
+servers:
+  - url: https://api.yourdomain.com
+
+paths:
+
+  /assets:
+    get:
+      summary: Get all assets
+      responses:
+        '200':
+          description: List of assets
+    post:
+      summary: Create a new asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: "Database Server"
+              category: "Infrastructure"
+              description: "PostgreSQL database"
+      responses:
+        '201':
+          description: Asset created
+
+  /assets/{id}:
+    get:
+      summary: Get a specific asset
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Asset details
+    put:
+      summary: Update an asset
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: "Updated Server"
+              category: "Cloud"
+              description: "Updated desc"
+      responses:
+        '200':
+          description: Asset updated
+    delete:
+      summary: Delete an asset
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Asset deleted
+
+  /threats:
+    get:
+      summary: Get all threats
+      responses:
+        '200':
+          description: List of threats
+    post:
+      summary: Create a new threat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              asset_id: 1
+              threat_name: "Cross-Site Scripting"
+              risk_level: 6
+      responses:
+        '201':
+          description: Threat created
+
+  /threats/{id}:
+    get:
+      summary: Get a specific threat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Threat details
+    put:
+      summary: Update a threat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              asset_id: 1
+              threat_name: "Updated Threat"
+              risk_level: 5
+      responses:
+        '200':
+          description: Threat updated
+    delete:
+      summary: Delete a threat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Threat deleted
+
+  /vulnerabilities:
+    get:
+      summary: Get all vulnerabilities
+      responses:
+        '200':
+          description: List of vulnerabilities
+    post:
+      summary: Create a new vulnerability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              asset_id: 1
+              vulnerability_name: "CVE-2024-54321"
+              severity_level: 9
+      responses:
+        '201':
+          description: Vulnerability created
+
+  /vulnerabilities/{id}:
+    get:
+      summary: Get a specific vulnerability
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Vulnerability details
+    put:
+      summary: Update a vulnerability
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              vulnerability_name: "Updated CVE"
+              severity_level: 6
+      responses:
+        '200':
+          description: Vulnerability updated
+    delete:
+      summary: Delete a vulnerability
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Vulnerability deleted
+
+  /risk-ratings:
+    get:
+      summary: Get all risk ratings
+      responses:
+        '200':
+          description: List of risk ratings
+    post:
+      summary: Create a new risk rating
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              asset_id: 1
+              threat_id: 1
+              vulnerability_id: 1
+              risk_score: 90
+              risk_description: "Critical risk"
+      responses:
+        '201':
+          description: Risk rating created
+
+  /risk-ratings/{id}:
+    get:
+      summary: Get a specific risk rating
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Risk rating details
+    put:
+      summary: Update a risk rating
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              risk_score: 70
+              risk_description: "Moderate risk"
+      responses:
+        '200':
+          description: Risk rating updated
+    delete:
+      summary: Delete a risk rating
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Risk rating deleted
+
+  /osint/virustotal:
+    get:
+      summary: Query VirusTotal for threat intelligence
+      description: |
+        Uses the VirusTotal API to fetch intelligence about a given domain, IP, file hash, or URL.
+        Requires the valid VirusTotal API key configured in the backend.
+      parameters:
+        - in: query
+          name: target
+          required: true
+          description: File hash, domain, IP, or URL to analyze
+          schema: { type: string }
+      responses:
+        '200':
+          description: VirusTotal analysis result
+          content:
+            application/json:
+              example:
+                data:
+                  attributes:
+                    stats:
+                      malicious: 5
+                      harmless: 55
+                      suspicious: 2
+                    results:
+                      Bitdefender:
+                        category: "malicious"
+                        result: "Trojan.GenericKD"
+        '400':
+          description: Invalid or missing target
+        '502':
+          description: VirusTotal API error

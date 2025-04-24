@@ -1,9 +1,11 @@
 /* Base layout */
 body {
   margin: 0;
+  padding: 0;
   font-family: "Segoe UI", sans-serif;
   background-color: #1e1e2f;
   color: #f3f4f6;
+  overflow-x: hidden;
 }
 
 .dashboard-container {
@@ -15,27 +17,41 @@ body {
 
 /* Header */
 .header {
-  display:inline-flex;
+  display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #1f2937; 
+  color: #f9fafb;            
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  position: relative;
+  top: 0;
+  flex-shrink: 0;
+  z-index: 1000;
 }
-.header h1 {
-  font-size: 2rem;
-  text-align:center;
-  margin-left:5px;
-  color: #61dafb;
 
+.header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .header button {
-  background: #dc2626;
+  padding: 0.5rem 1rem;
+  background-color: #ef4444; /* red-500 */
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 6px;
-  font-weight: bold;
+  font-size: 0.95rem;
   cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
 }
+
+.header button:hover {
+  background-color: #dc2626; /* red-600 */
+}
+
 .alerts-section {
   background: #2a2b3d;
   padding: 10px;
@@ -49,20 +65,36 @@ body {
   background: #2a2b3d;
   padding: 1.5rem;
   border-radius: 10px;
-  display: grid;
-  gap: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 2rem;
   text-align: center;
 }
-
 .lookup {
   display: flex;
-  text-align: center;
-  height:40px;
-  padding-bottom:20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 220px;
 }
 input{
   text-align: center;
   gap:1.2rem;
+}
+.input-example {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+  max-width: 220px;
+  word-wrap: break-word;
+  line-height: 1.2;
 }
 
 .lookup label, .filters label {
@@ -79,23 +111,26 @@ input{
   border: none;
   background: #374151;
   color: white;
-  gap:1.2rem;
-  padding-right:20px;
+  padding: 0.5rem;
+  width: 220px;
+  max-width: 100%;
+  text-align: center;
 }
 
 .lookup button {
-  margin-bottom:25px;
+  margin-bottom:50px;
   margin-left: 10px;
   padding-left:10px;
   background: #3b82f6;
   color: white;
-  padding:5px;  
+  padding: 6px 12px;
   height:fit-content;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   margin-right:20px;
 }
+
 
 .error {
   color: #f87171;
@@ -105,9 +140,9 @@ input{
 /* Card styling */
 .results {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  padding:20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;           
+  align-items: start;  
 }
 
 .alerts-grid {
@@ -158,18 +193,19 @@ input{
 
 .siem-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse:collapse;
   font-size: 0.85rem;
   border-radius: 6px;
   overflow: hidden;
 }
 
+
 .siem-table th,
-.siem-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #374151;
-  text-align: left;
-  white-space: nowrap;
+.siem-table td.summary-cell {
+  white-space: normal;
+  word-break:keep-all;
+  max-width: 300px;
+  padding: 1rem;
 }
 
 .siem-table th {
@@ -287,6 +323,7 @@ button {
   color: white;
   border: none;
   padding: 8px 15px;
+  margin-bottom: .75rem;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -339,4 +376,75 @@ button:hover {
   border-radius: 6px;
   font-weight: bold;
   font-size: 0.85rem;
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centers vertically */
+  align-items: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* Card stays centered */
+.login-card {
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+.login-title {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.login-subtitle {
+  margin-bottom: 1.5rem;
+  color: white;
+  text-align:center;
+  font-weight: 400;
+}
+
+.login-form {
+  width: 100%;
+}
+.login-container h2{
+  text-align: center;
+}
+/* Add spacing between inputs and button */
+.login-input {
+  width: 100%;
+  padding: .5rem;
+  margin-bottom: 1.75rem;
+  border: 1px solid #ccc;
+  color:#111827;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1.25rem;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Sticky footer styles */
+.footer {
+  margin-top: auto;
+  padding: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+  color: #93c5fd;
+  background-color: #1f2937; 
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-family: "Segoe UI", sans-serif;
+  width: 100%;
 }

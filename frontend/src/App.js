@@ -47,34 +47,48 @@ function LoginPage() {
   
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Real Time Threat Intelligence</h1>
-        <h5>This application provides real-time analysis of current threats.</h5>
+    <div className="container">
+    <div className="login-container">
+  <div className="login-card">
+    <h1 className="login-title">Shop Smart Solutions
+    </h1>
+    <h5 className="login-subtitle">
+    Real Time Threat Intelligence SIEM
+    </h5>
 
-        <div className="loginForm">
-          <form onSubmit={loginForm}>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <input type="submit" value="Login" />
-          </form>
-          <p style={{ marginTop: "1rem" }}>
-            Don’t have an account? <Link to="/register">Register here</Link>
-          </p>
-        </div>
-      </header>
-    </div>
+    <form className="login-form" onSubmit={loginForm}>
+      {error && <p className="login-error">{error}</p>}
+
+      <input
+        type="text"
+        className="login-input"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+
+      <input
+        type="password"
+        className="login-input"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button type="submit" className="login-button">
+        Login
+      </button>
+    </form>
+
+    <p className="login-register">
+      Don’t have an account? <Link to="/register">Register here</Link>
+    </p>
+  </div>
+  </div>
+  <footer className="footer">
+  Copyright &copy; <strong><span>ShopSmartSolutions</span></strong> 2025
+</footer>
+</div>
   );
 }
 

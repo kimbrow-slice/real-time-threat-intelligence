@@ -3,8 +3,8 @@
 
 My contributions centered on integrating real-time threat intelligence, building secure authentication, system logging, user session meanagement, and designing the interactive user interface.
 
-I developed both the **frontend** (`dashboard.js`, `register.js`, `registerform.jsx`, `login_page.js`) and **backend** (`routes.py`, `alerts.py`, `risk_calculator.py`, `db.py`) 
-components that control the platform. The dashboard enables users to monitor live security analytics, generated through `risk_calculator.py` by aggregating scan results and querying external 
+I developed much of both the **frontend** (`dashboard.js`, `register.js`, `registerform.jsx`, `login_page.js`) and **backend** (`routes.py`, `alerts.py`, `risk_calculator.py`, `db.py`) 
+core components that control the platform. The dashboard enables users to monitor live security analytics, generated through `risk_calculator.py` by aggregating scan results and querying external 
 threat intelligence sources including **VirusTotal**, **Shodan**, the **OSV** and **EPSS APIs**. The OSV and EPSS APIs contain CVE datasets that are further enriched using **Hugging Face** models, 
 which assign severity labels, contextual threat scores, and probabilities of exploitation in the next 30 days. This enables focused risk prioritization and vendor aware security remediation planning.
 

@@ -14,6 +14,6 @@ The `db.py` file maintains user data and threat logs using a **PostgreSQL** data
 statements in `db.py` and `routes.py`. This helps ensures that user input is never directly interpolated into query strings, eliminating a common vector for database compromise.
 
 I've included my vulnerability assessment results from tools such as **WireShark**, **Nmap** (`nmap_scan.txt`) and **OWASP ZAP** (`ZAP-Report.html`), which provided me the ability to close crucial
-gaps within the systems architecture. Additionally, I creatwed `security_validation.md` to document the layered security controls and validate compliance our recommended threat mitigations.
+gaps within the systems architecture. Additionally, I created `security_validation.md` to document the layered security controls and validate compliance our recommended threat mitigations.
 
 

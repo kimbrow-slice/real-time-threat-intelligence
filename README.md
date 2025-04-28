@@ -126,7 +126,7 @@ Flask backend API on: http://localhost:5000
 ---
 
 ## Final Presentation Download
-👉[Download](docs/final_presentation.ppx)
+👉[Download](docs/final_presentation.pptx)
 
 
 

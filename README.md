@@ -125,6 +125,12 @@ Flask backend API on: http://localhost:5000
 
 ---
 
+## Final Presentation Download
+👉[Download](docs/final_presentation.ppx)
+
+
+
+
 # Contributors
 - [kimbrow-slice](https://github.com/kimbrow-slice)
 - [mohamede2022](https://github.com/mohamede2022)

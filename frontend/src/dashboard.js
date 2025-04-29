@@ -29,12 +29,12 @@ function Dashboard() {
   const [shodanHostnames, setShodanHostnames] = useState("");
   const [vtResult, setVtResult] = useState(null);
   const [shodanResult, setShodanResult] = useState(null);
-  const [shodanSearchResult, setShodanSearchResult] = useState(null);
+  const [shodanSearchResult, setShodanSearchResult] = useState(null);  
   const [shodanDnsResult, setShodanDnsResult] = useState(null);
   const [epssData, setEpssData] = useState([]);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState(null);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [isVtCardOpen, setIsVtCardOpen] = useState(false);
@@ -46,33 +46,35 @@ function Dashboard() {
   const [threatNameFilter, setThreatNameFilter] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState({});
   const [groupedAlerts, setGroupedAlerts] = useState([]);
+  const [noValidCVEs, setNoValidCVEs] = useState(false);
+
 
   const computeRiskLabel = (score) => {
-  if (score >= 4.0) return "Critical Risk";
-  else if (score >= 3.0) return "High Risk";
-  else if (score >= 2.0) return "Moderate Risk";
-  else if (score >= 1.0) return "Low Risk";
-  else return "No Risk";
-};
+    if (score >= 4.0) return "Critical Risk";
+    else if (score >= 3.0) return "High Risk";
+    else if (score >= 2.0) return "Moderate Risk";
+    else if (score >= 1.0) return "Low Risk";
+    else return "No Risk";
+  };
 
 
-// Maps a risk label to its corresponding CSS class.
-const getRiskLabelClass = (label) => {
-  switch (label) {
-    case "Critical Risk":
-      return "critical-risk";
-    case "High Risk":
-      return "high-risk";
-    case "Moderate Risk":
-      return "moderate-risk";
-    case "Low Risk":
-      return "low-risk";
-    case "No Risk":
-      return "no-risk";
-    default:
-      return "alert-risk"; // fallback if the label is "Alert" or unrecognized
-  }
-};
+  // Maps a risk label to its corresponding CSS class.
+  const getRiskLabelClass = (label) => {
+    switch (label) {
+      case "Critical Risk":
+        return "critical-risk";
+      case "High Risk":
+        return "high-risk";
+      case "Moderate Risk":
+        return "moderate-risk";
+      case "Low Risk":
+        return "low-risk";
+      case "No Risk":
+        return "no-risk";
+      default:
+        return "alert-risk"; // fallback if the label is "Alert" or unrecognized
+    }
+  };
 
 
   useEffect(() => {
@@ -80,7 +82,7 @@ const getRiskLabelClass = (label) => {
     if (!storedUserId) navigate("/");
     else setUserId(storedUserId);
   }, [navigate]);
-  
+
   useEffect(() => {
 
     setButtonDisabled(false);
@@ -89,7 +91,7 @@ const getRiskLabelClass = (label) => {
   const handleFetchEPSS = async () => {
     setLoading(true); // Start loading state when button is clicked
     setButtonDisabled(true); // Disable the button to prevent multiple clicks
-
+    setNoValidCVEs(false); // Reset flag for the loading message
     try {
       const osvResponse = await scanDependencies(samplePackages);
       const normalizedOSV = Array.isArray(osvResponse)
@@ -107,6 +109,15 @@ const getRiskLabelClass = (label) => {
             summary: entry.summary,
           }))
       );
+
+      if (advisoriesWithCVEs.length === 0) {
+        setNoValidCVEs(true);
+        setEpssData([]); // Clear any old data
+        setLoading(false);
+        setButtonDisabled(false);
+        return;
+      }
+
 
       const epssResponse = await getEPSSData(advisoriesWithCVEs);
       const enriched = await enrichRisks(epssResponse);
@@ -150,7 +161,7 @@ const getRiskLabelClass = (label) => {
     }, {});
     setGroupedAlerts(grouped);
   };
-  
+
 
   const toggleAlertDetails = (id) => {
     setIsAlertOpen((prevState) => ({
@@ -181,28 +192,50 @@ const getRiskLabelClass = (label) => {
     navigate(`/alert/${alertId}`);
   };
 
+  const handleLogout = async () => {
+    try {
+      const csrfToken = localStorage.getItem("csrf_token");
 
-  
-  const handleLogout = () => {
+      await fetch(`${process.env.REACT_APP_API_URL}/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+          withCredentials: true,
+        }
+      );
+
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+
+    // Clean up client-side user data
     localStorage.removeItem("user_id");
+
+    // Redirect to home or login screen
     navigate("/");
   };
 
-  const 
-  fetchVirusTotalDetails = async () => {
-    if (!vtIpAddress.trim()) {
-      setError("Please enter a valid IP address for VirusTotal.");
-      return;
-    }
 
-    try {
-      const vtData = await scanIpAddress(vtIpAddress, userId);
-      setVtResult(vtData);
-      setError("");
-    } catch {
-      setError("Failed to fetch VirusTotal details.");
-    }
-  };
+  const
+    fetchVirusTotalDetails = async () => {
+      if (!vtIpAddress.trim()) {
+        setError("Please enter a valid IP address for VirusTotal.");
+        return;
+      }
+
+      try {
+        const vtData = await scanIpAddress(vtIpAddress, userId);
+        setVtResult(vtData);
+        setError("");
+      } catch {
+        setError("Failed to fetch VirusTotal details.");
+      }
+    };
 
   const fetchShodanDetails = async () => {
     if (!shodanIpAddress.trim()) {
@@ -251,7 +284,6 @@ const getRiskLabelClass = (label) => {
 
   const toggleVtCard = () => setIsVtCardOpen(!isVtCardOpen);
   const toggleShodanCard = () => setIsShodanCardOpen(!isShodanCardOpen);
-  const toggleShodanSearchCard = () => setIsShodanSearchCardOpen(!isShodanSearchCardOpen);
   const toggleShodanDnsResolveCard = () => setIsShodanDnsResolveCardOpen(!isShodanDnsResolveCardOpen);
 
   const renderVirusTotalCard = () => {
@@ -278,7 +310,10 @@ const getRiskLabelClass = (label) => {
     );
   };
 
-
+  const toggleShodanSearchCard = () => {
+    setIsShodanSearchCardOpen((open) => !open);
+  };
+  
   const renderShodanCard = () => {
     if (!shodanResult) return null;
 
@@ -310,20 +345,20 @@ const getRiskLabelClass = (label) => {
       }
       groupedAlerts[alert.threat_name].push(alert);
     });
-  
+
     return Object.keys(groupedAlerts).map((threatName) => {
       const alertCount = groupedAlerts[threatName].length;
       const firstAlert = groupedAlerts[threatName][0];
-  
+
       // If the stored alert_type is "Alert", compute its actual label from risk_score.
       const displayLabel =
         firstAlert.alert_type === "Alert"
           ? computeRiskLabel(firstAlert.risk_score)
           : firstAlert.alert_type;
-  
+
       // Use displayLabel for the CSS class.
       const cardClass = getRiskLabelClass(displayLabel);
-  
+
       return (
         <div className={`card alert-card ${cardClass}`} key={threatName}>
           <h2 onClick={() => toggleAlertDetails(threatName)} style={{ cursor: "pointer" }}>
@@ -364,22 +399,73 @@ const getRiskLabelClass = (label) => {
       );
     });
   };
-  
 
   const renderShodanSearchCard = () => {
     if (!shodanSearchResult) return null;
-
+  
+    const entries = Array.isArray(shodanSearchResult)
+      ? shodanSearchResult
+      : [];
+  
     return (
       <div className="card siem-card">
-        <h2 onClick={toggleShodanSearchCard} style={{ cursor: "pointer" }}>
-          {isShodanSearchCardOpen ? "▲ Shodan Search Results" : "▼ Shodan Search Results"}
+        <h2
+          onClick={() => setIsShodanSearchCardOpen(o => !o)}
+          style={{ cursor: "pointer" }}
+        >
+          {isShodanSearchCardOpen
+            ? "▲ Shodan Search Results"
+            : "▼ Shodan Search Results"}
         </h2>
+  
         {isShodanSearchCardOpen && (
-          <pre>{JSON.stringify(shodanSearchResult, null, 2)}</pre>
+          entries.length > 0 ? (
+            <table className="siem-table shodan-table">
+              <thead>
+                <tr>
+                  <th>IP</th>
+                  <th>Port</th>
+                  <th>Product</th>
+                  <th>Banner</th>
+                  <th>Org</th>
+                  <th>ISP</th>
+                  <th>Location</th>
+                  <th>Hostnames</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry, idx) => (
+                  <tr key={idx}>
+                    <td>{entry.ip_str}</td>
+                    <td>{entry.port}</td>
+                    <td>{entry.product || "N/A"}</td>
+                    <td>{entry.version || "N/A"}</td>
+                    <td>{entry.org || "N/A"}</td>
+                    <td>{entry.isp || "N/A"}</td>
+                    <td>
+                      {entry.location?.city
+                        ? `${entry.location.city}, `
+                        : ""}
+                      {entry.location?.country_name || ""}
+                    </td>
+                    <td>
+                      {entry.hostnames?.length
+                        ? entry.hostnames.join(", ")
+                        : "None"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No Shodan results to display.</p>
+          )
         )}
       </div>
     );
   };
+  
+  
 
   const renderShodanDnsResolveCard = () => {
     if (!shodanDnsResult) return null;
@@ -397,191 +483,224 @@ const getRiskLabelClass = (label) => {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="container">
       <div className="header">
         <h1> ShopSmart Solutions SIEM</h1>
         <button onClick={handleLogout}>Logout</button>
       </div>
-
-      <section className="input-section">
-        <h2>API Scans</h2>
-
-        <div className="lookup">
-          <label>VirusTotal IP: </label>
-          <input
-            type="text"
-            placeholder="Enter IP"
-            value={vtIpAddress}
-            onChange={(e) => setVtIpAddress(e.target.value)}
-          />
-          <button onClick={fetchVirusTotalDetails}>Scan</button>
-        </div>
-
-        <div className="lookup">
-          <label>Shodan IP: </label>
-          <input
-            type="text"
-            placeholder="Enter IP"
-            value={shodanIpAddress}
-            onChange={(e) => setShodanIpAddress(e.target.value)}
-          />
-          <button onClick={fetchShodanDetails}>Scan</button>
-
-          <label>Shodan Query: </label>
-          <input
-            type="text"
-            placeholder="Enter query"
-            value={shodanQuery}
-            onChange={(e) => setShodanQuery(e.target.value)}
-          />
-          <button onClick={fetchShodanSearch}>Search</button>
-
-          <label>Shodan Hostnames: </label>
-          <input
-            type="text"
-            placeholder="Enter hostnames"
-            value={shodanHostnames}
-            onChange={(e) => setShodanHostnames(e.target.value)}
-          />
-          <button onClick={fetchShodanDnsResolve}>Resolve DNS</button>
-        </div>
+      <div className="dashboard-container">
 
 
-        {error && <p className="error">{error}</p>}     
-      </section>
+        <section className="input-section">
+          <h2>API Scans</h2>
 
-      <section className="filters-section">
-      
-      </section>
-
-      {loading ? (
-        <p>Loading alerts...</p>
-      ) : (
-        <section className="alerts-section">
-          <h2>Recent Alerts  </h2>
-          <div className="filters">
-          <div>
-            <label>Severity            </label>
-            <select onChange={(e) => handleFilterChange(e, "severity")} value={alertTypeFilter}>
-              <option value="">All</option>
-              <option value="High Risk">High Risk</option>
-              <option value="Moderate Risk">Moderate Risk</option>
-              <option value="Low Risk">Low Risk</option>
-              <option value="Critical Risk">Critical Risk</option>
-              <option value="No Risk">No Risk</option>
-            </select>
-            <label>Threat Type            </label>
+          <div className="lookup">
+          <div className="form-group">
+            <label>VirusTotal IP: </label>
             <input
               type="text"
-              placeholder="Search by threat type"
-              value={threatNameFilter}
-              onChange={(e) => handleFilterChange(e, "type")}
+              placeholder="Enter IP"
+              value={vtIpAddress}
+              onChange={(e) => setVtIpAddress(e.target.value)}
             />
-          </div>
-          <div>
+             <p className="input-example">
+                <code> Example: 8.8.8.8</code>
+              </p>
+            </div>
+            <button onClick={fetchVirusTotalDetails}>Scan</button>
+
+          <div className="lookup">
+          <div className="form-group">
+            <label>Shodan IP: </label>
+            <input
+              type="text"
+              placeholder="Enter IP"
+              value={shodanIpAddress}
+              onChange={(e) => setShodanIpAddress(e.target.value)}
+            />
+              <p className="input-example">
+                <code> Example: 8.8.8.8</code>
+              </p>
+            </div>
+            <button onClick={fetchShodanDetails}>Scan</button>
             
+
+            <div className="form-group">
+            <label>Shodan Search Query: </label>
+            <input
+              type="text"
+              placeholder="Enter a search  query"
+              value={shodanQuery}
+              onChange={(e) => setShodanQuery(e.target.value)}
+            />
+              <p className="input-example">
+                <code>Example: apache port:80 country:US</code>
+              </p>
+              </div>
+            <button onClick={fetchShodanSearch}>Search</button>
+            
+            <div className="form-group">
+              <label>Hostname to Resolve: </label>
+              <input
+                type="text"
+                placeholder="example.com or comma-separated"
+                value={shodanHostnames}
+                onChange={(e) => setShodanHostnames(e.target.value)}
+              />
+              <p className="input-example">
+                <code>Example: example.com</code> or <code>site1.com,site2.net</code>
+              </p>
+            </div>
+            <button onClick={fetchShodanDnsResolve}>Resolve DNS</button>
           </div>
           </div>
 
 
-          <div className="alerts-grid">
-            {renderAlertCards()}
-          </div>
-          
+          {error && <p className="error">{error}</p>}
         </section>
-      )} 
 
-      {error && <p className="error">{error}</p>}
+        <section className="results">
+          {renderVirusTotalCard()}
+          {renderShodanCard()}
+          {renderShodanSearchCard()}
+          {renderShodanDnsResolveCard()}
+        </section>
 
-      
+        <section className="filters-section">
 
-      <section className="results">
-        {renderVirusTotalCard()}
-        {renderShodanCard()}
-        {renderShodanSearchCard()}
-        {renderShodanDnsResolveCard()}
-      </section>
+        </section>
 
-<div className="epss-section">
-        <h2>Dependency Risk Intelligence</h2>
-        <button 
-          onClick={handleFetchEPSS} 
-          disabled={buttonDisabled || loading}
-        >
-          {loading ? "Fetching EPSS Data..." : "Fetch EPSS Data"}
-        </button>
-        
         {loading ? (
-          <p>Loading...</p>
-        ) : epssData && epssData.length > 0 ? (
-          <table className="siem-table">
-            <thead>
-              <tr>
-                <th>Pkg</th>
-                <th>Ver</th>
-                <th>CVE</th>
-                <th>Enriched Risk Score</th>
-                <th>30d Exploit %</th>
-                <th>Date</th>
-                <th>Summary</th>
-                <th>Risk</th>
-                <th>Criticality</th>
-              </tr>
-            </thead>
-            <tbody>
-              {epssData.map((entry, index) => {
-                const riskColor = {
-                  "Critical Risk": "#DC2626", 
-                  "High Risk": "#F97316",     
-                  "Moderate Risk": "#FACC15", 
-                  "Low Risk": "#10B981",      
-                  "No Risk": "#6B7280"        
-                }[entry.risk_label] || "#D1D5DB";
-
-                return (
-                  <tr key={index}>
-                    <td>{entry.package}</td>
-                    <td>{entry.version}</td>
-                    <td>
-                      <a
-                        href={`https://nvd.nist.gov/vuln/detail/${entry.cve}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {entry.cve}
-                      </a>
-                    </td>
-                    <td>{(entry.risk_score).toFixed(2)}</td>
-                    <td>{(entry.percentile * 100).toFixed(2)}%</td>
-                    <td>{entry.date}</td>
-                    <td title={entry.summary}>
-                      {entry.summary ? (entry.summary.length > 60 ? `${entry.summary.slice(0, 60)}...` : entry.summary) : "No Summary Available"}
-                    </td>
-                    <td>{entry.risk_score}</td>
-                    <td>
-                      <span
-                        style={{
-                          backgroundColor: riskColor,
-                          padding: "4px 8px",
-                          borderRadius: "6px",
-                          color: "white",
-                          fontWeight: "bold",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        {entry.risk_label}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <p>Loading alerts...</p>
         ) : (
-          <p>No CVEs with EPSS scores found.</p>
+          <section className="alerts-section">
+            <h2>Recent Alerts  </h2>
+            <div className="filters">
+              <div>
+                <label>Severity            </label>
+                <select onChange={(e) => handleFilterChange(e, "severity")} value={alertTypeFilter}>
+                  <option value="">All</option>
+                  <option value="High Risk">High Risk</option>
+                  <option value="Moderate Risk">Moderate Risk</option>
+                  <option value="Low Risk">Low Risk</option>
+                  <option value="Critical Risk">Critical Risk</option>
+                  <option value="No Risk">No Risk</option>
+                </select>
+                <label>Threat Type            </label>
+                <input
+                  type="text"
+                  placeholder="Search by threat type"
+                  value={threatNameFilter}
+                  onChange={(e) => handleFilterChange(e, "type")}
+                />
+              </div>
+              <div>
+
+              </div>
+            </div>
+
+
+            <div className="alerts-grid">
+              {renderAlertCards()}
+            </div>
+
+          </section>
         )}
+
+
+        
+
+        <div className="epss-section">
+          <h2>Dependency Risk Intelligence</h2>
+          <button
+            onClick={handleFetchEPSS}
+            disabled={buttonDisabled || loading}
+          >
+            {loading ? "Fetching EPSS Data..." : "Fetch EPSS Data"}
+          </button>
+
+          {loading && <p>Loading...</p>}
+
+          {!loading && noValidCVEs && (
+            <p style={{ color: "orange" }}>
+              No valid CVEs found in your dependency advisories.
+            </p>
+          )}
+
+          {!loading && !noValidCVEs && epssData && epssData.length > 0 && (
+            <table className="siem-table">
+              <thead>
+                <tr>
+                  <th>Pkg</th>
+                  <th>Ver</th>
+                  <th>CVE</th>
+                  <th>Enriched Risk Score</th>
+                  <th>30d Exploit %</th>
+                  <th>Date</th>
+                  <th>Summary</th>
+                  <th>Risk</th>
+                  <th>Criticality</th>
+                </tr>
+              </thead>
+              <tbody>
+                {epssData.map((entry, index) => {
+                  const riskColor = {
+                    "Critical Risk": "#DC2626",
+                    "High Risk": "#F97316",
+                    "Moderate Risk": "#FACC15",
+                    "Low Risk": "#10B981",
+                    "No Risk": "#6B7280"
+                  }[entry.risk_label] || "#D1D5DB";
+
+                  return (
+                    <tr key={index}>
+                      <td>{entry.package}</td>
+                      <td>{entry.version}</td>
+                      <td>
+                        <a
+                          href={`https://nvd.nist.gov/vuln/detail/${entry.cve}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {entry.cve}
+                        </a>
+                      </td>
+                      <td>{entry.risk_score.toFixed(2)}</td>
+                      <td>{(entry.percentile * 100).toFixed(2)}%</td>
+                      <td>{entry.date}</td>
+                      <td className="summary-cell">
+                        {entry.summary || "No Summary Available"}
+                      </td>
+                      <td>{entry.risk_score}</td>
+                      <td>
+                        <span
+                          style={{
+                            backgroundColor: riskColor,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            color: "white",
+                            fontWeight: "bold",
+                            fontSize: "0.85rem"
+                          }}
+                        >
+                          {entry.risk_label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+
+          {!loading && !noValidCVEs && epssData.length === 0 && (
+            <p>No CVEs with EPSS scores found.</p>
+          )}
+        </div>
       </div>
-      
+      <footer className="footer">
+        Copyright &copy; <strong><span>ShopSmartSolutions</span></strong> 2025
+      </footer>
     </div>
   );
 }

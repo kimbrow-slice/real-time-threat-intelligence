@@ -43,12 +43,13 @@ Create a ```.env``` file inside the /api directory with the following:
 
 #### Database
 ```
+DB_HOST=localhost
+DB_PORT=5432
 DB_USER=your_postgres_username
-DB_NAME=your_database_name
+DB_NAME=threat_intel
 DB_PASSWORD_ENC=your_encrypted_password
 FERNET_KEY=your_fernet_key
-DB_HOST=localhost
-DB_PORT=your_port_number
+SECRET_KEY=your_flask_secret_key
 ```
 
 #### API Keys
@@ -57,6 +58,10 @@ VIRUSTOTAL_IP=your_virus_total_ip_url
 VIRUSTOTAL_API_KEY=your_virustotal_key
 SHODAN_API=your_shodan_key
 HUGGING_FACE_KEY=your_huggingface_key
+```
+
+#### Shodan Endpoint
+```
 SHODAN_API_BASE_URL=your_shodan_base_url
 SHODAN_API_SEARCH_URL=your_shodan_search_url
 SHODAN_API_RESOLVE_DNS_URL=your_shodan_resolve_url
@@ -75,10 +80,10 @@ REACT-APP_ALERTS=internal_route_url/
 
 #### SMTP Alerting
 ```
-SENDGRID_API_KEY=your_sendgrid_key
-SENDGRID_EMAIL=your_sendgrid_sender_email
-SENDGRID_RECIPIENT=your_sendgrid_receipient
-WEBHOOK_URL=your_webhook_url
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_EMAIL=alerts@example.com
+SENDGRID_RECIPIENT=admin@example.com
+WEBHOOK_URL=https://your-webhook-url
 ```
 
 ### 3. Set Up the Database
@@ -119,6 +124,12 @@ React frontend on: http://localhost:3000
 Flask backend API on: http://localhost:5000
 
 ---
+
+## Final Presentation Download
+👉[Download](docs/final_presentation.pptx)
+
+
+
 
 # Contributors
 - [kimbrow-slice](https://github.com/kimbrow-slice)

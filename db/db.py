@@ -21,8 +21,8 @@ def get_connection():
             port=os.getenv("DB_PORT"),
             dbname=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
-            password=DB_PASSWORD
-        )
+            password=os.getenv("DB_PASSWORD_ENC")        
+            )
         return conn
     except Exception as e:
         print("Failed to connect to database:", e)
